@@ -158,7 +158,7 @@ class DieuKhien:
             else: #Tệp tiếng Việt tồn tại
                 self.hien_thi.Nhap_Trang_Thai(f"Đang xử lý tệp: {hop_thoai['tep_vie']}")
                 du_lieu = self.mo_hinh.tep_tin.Doc_2_Csv(hop_thoai)
-            #self.Luu_Du_Lieu_Vao_Csdl(du_lieu)
+            self.Luu_Du_Lieu_Vao_Csdl(du_lieu)
         else:
             self.hien_thi.Nhap_Trang_Thai('Không có tệp Csv để xử lý')
     
