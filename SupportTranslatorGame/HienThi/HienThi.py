@@ -5,6 +5,7 @@ from tkinter import ttk, Text, Menu
 from tkinter import filedialog as Hop_Thoai_Tep
 from tkinter import messagebox as Hop_Thoai_Thong_Bao
 from .HopThoaiXuat import HopThoaiXuat
+from .HopThoaiNhap import HopThoaiNhap
 
 class HienThi(ttk.Frame):
     def __init__(self, tk_goc):
@@ -41,13 +42,15 @@ class HienThi(ttk.Frame):
         self.menubar.add_cascade(label='Hành động', menu=menu_hanh_dong)
         #Tạo menu nhập
         menu_nhap = Menu(self.menubar, tearoff=0)
+        menu_nhap.add_command(label='Csv', command=self.dieu_khien.Nhap_Tep_Csv)
+        #menu_nhap.add_command(label='Json', command=self.dieu_khien.Nhap_Tep_Json)
         menu_nhap.add_command(label='XUnity', command=self.dieu_khien.Nhap_Tep_XUnity)
-        menu_nhap.add_command(label='Json', command=self.dieu_khien.Nhap_Tep_Json)
         self.menubar.add_cascade(label='Nhập', menu=menu_nhap)
         #Tạo menu xuất
         menu_xuat = Menu(self.menubar, tearoff=0)
+        menu_xuat.add_command(label='Csv', command=self.dieu_khien.Xuat_Tep_Csv)
+        #menu_xuat.add_command(label='Json', command=self.dieu_khien.Xuat_Tep_Json)
         menu_xuat.add_command(label='XUnity', command=self.dieu_khien.Xuat_Tep_XUnity)
-        menu_xuat.add_command(label='Json', command=self.dieu_khien.Xuat_Tep_Json)
         self.menubar.add_cascade(label='Xuất', menu=menu_xuat)
         self.tk_goc.config(menu=self.menubar)
         
@@ -102,9 +105,9 @@ class HienThi(ttk.Frame):
         '''Lấy trang hiện tại đang nhập'''
         try:
             trang = int(eval(str(self.entry_trang_hien_tai.get())))
-            return trang
         except:
             return 1
+        return trang
         
     def Dat_Trang_Hien_Tai(self, trang):
         '''Đặt lại số trang đang hiển thị'''
@@ -155,13 +158,6 @@ class HienThi(ttk.Frame):
         #Tạo nút bấm Cập nhật
         self.button_cap_nhat = ttk.Button(self.frame_nhap_button, text='Cập nhật', command=self.dieu_khien.Cap_Nhat_Cau_Goc)
         self.button_cap_nhat.grid(row=2, column=0, sticky='nsew')
-        #Tạo nút bấm Dịch mới
-        #self.button_dich_moi = ttk.Button(self.frame_nhap_button, text='Lưu dịch mới', command=self.Button_Dich_Moi_Clicked)
-        #self.button_dich_moi.grid(row=3, column=0, sticky='nsew')
-        #Tạo nút bấm Dịch khác
-        #self.button_dich_khac = ttk.Button(self.frame_nhap_button, text='Dịch khác', command=self.Button_Dich_Khac_Clicked)
-        #self.button_dich_khac.grid(row=4, column=0, sticky='nsew')
-        #Tạo nút bấm Xóa
         self.button_xoa = ttk.Button(self.frame_nhap_button, text='Xóa', command=self.dieu_khien.Xoa_Cau_Goc)
         self.button_xoa.grid(row=5, column=0, sticky='nsew')
     
@@ -211,10 +207,17 @@ class HienThi(ttk.Frame):
     def Hop_Thoai_Mo_Tep(self, loai_tep = 'XUnity'):
         '''Mở ra hộp thoại cho phép nhập vào vị trí chính xác của tệp tin'''
         kieu_tep = (('XUnity', '*.txt'),
+            ('Csv', '*.csv'),
             ('Json', '*.json'),
             ('Tất cả tệp', '*.*'))
         if loai_tep == 'Json':
                 kieu_tep = (('Json', '*.json'),
+                    ('Csv', '*.csv'),
+                    ('XUnity', '*.txt'),
+                    ('Tất cả tệp', '*.*'))
+        if loai_tep == 'Csv':
+                kieu_tep = (('Csv', '*.csv'),
+                    ('Json', '*.json'),
                     ('XUnity', '*.txt'),
                     ('Tất cả tệp', '*.*'))
         ten_tep = Hop_Thoai_Tep.askopenfilename(title='Mở tệp', filetypes=kieu_tep) # initialdir='/' thư mục mặc định
@@ -223,10 +226,17 @@ class HienThi(ttk.Frame):
     def Hop_Thoai_Luu_Tep(self, loai_tep = 'XUnity'):
         '''Hộp thoại lưu tệp'''
         kieu_tep = (('XUnity', '*.txt'),
+            ('Csv', '*.csv'),
             ('Json', '*.json'),
             ('Tất cả tệp', '*.*'))
         if loai_tep == 'Json':
                 kieu_tep = (('Json', '*.json'),
+                    ('Csv', '*.csv'),
+                    ('XUnity', '*.txt'),
+                    ('Tất cả tệp', '*.*'))
+        if loai_tep == 'Csv':
+                kieu_tep = (('Csv', '*.csv'),
+                    ('Json', '*.json'),
                     ('XUnity', '*.txt'),
                     ('Tất cả tệp', '*.*'))
         ten_tep = Hop_Thoai_Tep.asksaveasfilename(title='Lưu tệp', filetypes=kieu_tep)
@@ -237,8 +247,16 @@ class HienThi(ttk.Frame):
         Trả về:
             (tep_nguon, tep_dich)
         '''
-        hopthoai = HopThoaiXuat(self, loai_tep)
-        return (hopthoai.tep_nguon, hopthoai.tep_dich)
+        hop_thoai = HopThoaiXuat(self, loai_tep)
+        return (hop_thoai.tep_nguon, hop_thoai.tep_dich)
+        
+    def Hop_Thoai_Nhap(self, loai_tep = 'XUnity'):
+        '''Mở hộp thoại lấy tệp nguồn và đích
+        Trả về:
+            (tep_nguon, tep_dich)
+        '''
+        hop_thoai = HopThoaiNhap(self, loai_tep)
+        return hop_thoai.du_lieu
         
     def Hop_Thoai_Thong_Bao(self, noi_dung):
         '''Bật lên thông báo có nội dung là noi_dung'''

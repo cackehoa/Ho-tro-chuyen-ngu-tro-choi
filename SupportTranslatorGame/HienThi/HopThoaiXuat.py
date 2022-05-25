@@ -41,6 +41,7 @@ class HopThoaiXuat(Hop_thoai):
         self.button_huy.pack(side='left')
         self.frame_box.pack()
         self.bind('<Escape>', lambda event: self.destroy())
+        self.bind('<Return>', lambda event: self.Button_Xuat())
         
     def Duyet_Tep_Nguon(self):
         '''Lấy đường dẫn tệp nguồn'''
