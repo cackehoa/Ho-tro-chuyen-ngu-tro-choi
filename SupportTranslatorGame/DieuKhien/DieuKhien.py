@@ -26,11 +26,11 @@ class DieuKhien:
             self.hien_thi.Nhap_Trang_Thai(f'Lọc với từ khóa: {self.tu_khoa}')
     
     def Lay_Trang_Danh_Sach(self, nut_bam = 'None'):
-        '''Hàm giúp lấy trang cần hiển thị
+        '''Lấy trang cần hiển thị
         Đầu vào nut_bam:
-            None : Không thay đổi hoặc nhập trang bằng tay
-            trai : khi ấn nút bấm bên trái <
-            phai : khi ấn nút bấm bên phải > '''
+            'None' : Không thay đổi hoặc nhập trang bằng tay
+            'trai' : khi ấn nút bấm bên trái <
+            'phai' : khi ấn nút bấm bên phải > '''
         trang = self.hien_thi.Lay_Trang_Hien_Tai()
         if nut_bam == 'trai':
             trang -=1
@@ -51,26 +51,26 @@ class DieuKhien:
         self.hien_thi.Nhap_Danh_Sach_Moi(du_lieu)
         
     def Tao_Moi_Cau_Goc(self):
-        '''Tạo mới câu gốc'''
+        '''Tạo mới câu gốc được nhập vào csdl'''
         txt_eng = self.Loc_Khoang_Trang(self.hien_thi.Lay_Txt_Eng())
         if len(txt_eng) < 2:
             self.hien_thi.text_eng.focus()
-            return self.hien_thi.Nhap_Trang_Thai('Câu (eng) không có nội dung')
+            return self.hien_thi.Nhap_Trang_Thai('Câu tiếng Anh không có nội dung')
         Kiem_tra_eng = self.mo_hinh.csdl.Lay_Eng(txt_eng)
         if len(Kiem_tra_eng) == 0:
             txt_vie = self.Loc_Khoang_Trang(self.hien_thi.Lay_Txt_Vie())
             if len(txt_vie) == 0:
                 self.hien_thi.text_vie.focus()
-                return self.hien_thi.Nhap_Trang_Thai('Câu (vie) không có nội dung')
+                return self.hien_thi.Nhap_Trang_Thai('Câu tiếng Việt không có nội dung')
             id = self.mo_hinh.csdl.Nhap_Cau_Goc(txt_eng, txt_vie)
             #Cập nhật id mới
             self.hien_thi.Cap_Nhat_Txt_ID(id)
             self.Lay_Trang_Danh_Sach()
             return self.hien_thi.Nhap_Trang_Thai(f'Lưu câu mới với id={id}')
-        return self.hien_thi.Nhap_Trang_Thai('Câu đã tồn tại')
+        return self.hien_thi.Nhap_Trang_Thai('Câu tiếng Anh đã tồn tại')
             
     def Cap_Nhat_Cau_Goc(self):
-        '''Cập nhật câu đang được chọn'''
+        '''Cập nhật câu đang được chọn vào csdl'''
         id = self.hien_thi.Lay_Txt_Id()
         if id ==0:
             return self.hien_thi.Nhap_Trang_Thai('Chưa chọn câu nào')
@@ -85,22 +85,23 @@ class DieuKhien:
             else:
                 if len(txt_eng) < 2:
                     self.hien_thi.text_eng.focus()
-                    return self.hien_thi.Nhap_Trang_Thai('Câu (eng) không có nội dung')
+                    return self.hien_thi.Nhap_Trang_Thai('Câu tiếng Anh không có nội dung')
                 Kiem_tra_eng = self.mo_hinh.csdl.Lay_Eng(txt_eng)
                 if len(Kiem_tra_eng) == 0:
                     txt_vie = self.Loc_Khoang_Trang(self.hien_thi.Lay_Txt_Vie())
                     self.mo_hinh.csdl.Cap_Nhat_Cau_Goc(id, txt_eng, txt_vie)
                 else:
-                    return self.hien_thi.Nhap_Trang_Thai('Câu đã tồn tại')
+                    return self.hien_thi.Nhap_Trang_Thai('Câu tiếng Anh đã tồn tại')
             self.Lay_Trang_Danh_Sach()
             return self.hien_thi.Nhap_Trang_Thai(f'Câu có id={id} được cập nhật')
         
     def Xoa_Cau_Goc(self):
+        '''Xóa câu đang được chọn khỏi csdl'''
         id = self.hien_thi.Lay_Txt_Id()
         self.mo_hinh.csdl.Xoa_Cau_Goc(id)
         self.Lay_Trang_Danh_Sach()
         self.hien_thi.Nhap_Trang_Thai(f'Câu có id={id} được xóa')
-        
+     
     def Luu_Du_Lieu_Vao_Csdl(self, du_lieu, ghi_de = False):
         '''Nhập danh sách dữ liệu vào csdl
         Đầu vào:
@@ -126,7 +127,7 @@ class DieuKhien:
             bo_qua +=1
         if nhap_csdl != 0:
             self.Lay_Trang_Danh_Sach()
-        self.hien_thi.Nhap_Trang_Thai(f'Nhập XUnity: {nhap_csdl} câu, bỏ qua: {bo_qua} câu')
+        self.hien_thi.Nhap_Trang_Thai(f'Nhập: {nhap_csdl} câu, bỏ qua: {bo_qua} câu')
         
     def Nhap_Tep_XUnity(self):
         '''Nhập dữ liệu từ tệp XUnity vào csdl'''
@@ -182,8 +183,8 @@ class DieuKhien:
     def Xuat_Tep_XUnity(self):
         '''Dịch những câu có trong tệp nguồn rồi xuất ra tệp đích'''
         hop_thoai = self.hien_thi.Hop_Thoai_Xuat('XUnity')
-        tep_nguon = hop_thoai[0]
-        tep_dich = hop_thoai[1]
+        tep_nguon = hop_thoai['tep_nguon']
+        tep_dich = hop_thoai['tep_dich']
         if len(tep_nguon) == 0:
             return self.hien_thi.Nhap_Trang_Thai('Không có tệp nguồn để xử lý')
         if len(tep_dich) == 0:
