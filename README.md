@@ -1,5 +1,5 @@
 # Ứng dụng hỗ trợ chuyển ngữ trò chơi
-Đây là ứng dụng **hỗ trợ** chuyển ngữ trò chơi viết bằng [Python](https://www.python.org/)
+Đây là ứng dụng hỗ trợ chuyển ngữ trò chơi viết bằng [Python](https://www.python.org/)
 (Không phải ứng dụng chuyển ngữ, dịch thuật)
 
 # Lời nói đầu:
@@ -61,7 +61,18 @@ Hiện tại mới mới bắt đầu viết nên tạm thời sử dụng thư 
 Mình phát triển cho chính mình sử dụng nên tên biến, đối tượng, lớp, ngôn ngữ hiển thị - chú thích đều là tiếng Việt (chưa có ý định đa ngôn ngữ hóa và nói thật là mình rất ngu tiếng Anh nên không đặt tên biến là tiếng Anh vì có thể sau này mình không nhớ biến đó tiếng Anh là cái quái gì)
 
 # Tập tin & định dạng hỗ trợ:
-- [Json](https://www.json.org/) (\*.json)
+- [Json](https://www.json.org/) (\*.json): Ví dụ
+````
+{
+	'id': 'cackehoa',
+	'name': 'Trung Hiếu'
+}
+````
+- CSV (\*.csv): Ví dụ
+````
+id,eng,vie
+text,English,"Tiếng Việt"
+````
 - XUnity (\*.txt): Ví dụ
 ````
 English=Tiếng Anh
