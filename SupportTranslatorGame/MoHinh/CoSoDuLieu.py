@@ -36,12 +36,12 @@ class CoSoDuLieu:
     def Tao_Bang(self):
         '''Tạo bảng tương ứng trong csdl'''
         sql_create = '''CREATE TABLE CAU_GOC (
-        id INTEGER  PRIMARY KEY AUTOINCREMENT,
-        eng TEXT NOT NULL,
-        vie TEXT DEFAULT '',
-        ngay_tao DATETIME DEFAULT CURRENT_TIMESTAMP,
-        ngay_sua DATETIME DEFAULT CURRENT_TIMESTAMP
-        );'''
+            id INTEGER  PRIMARY KEY AUTOINCREMENT,
+            eng TEXT NOT NULL,
+            vie TEXT DEFAULT '',
+            ngay_tao DATETIME DEFAULT CURRENT_TIMESTAMP,
+            ngay_sua DATETIME DEFAULT CURRENT_TIMESTAMP
+            );'''
         self.ket_noi_sqlite.execute(sql_create)
         print('Tạo bảng CAU_GOC thành công')
         
@@ -50,14 +50,16 @@ class CoSoDuLieu:
             sql_select = '''SELECT id, eng, vie
                 FROM CAU_GOC
                 ORDER BY eng
-                LIMIT ?, ? '''
+                LIMIT ?, ?
+                '''
             self.con_tro.execute(sql_select, (bat_dau, so_dong))
         else:
             sql_select = '''SELECT id, eng, vie
                 FROM CAU_GOC
                 WHERE eng LIKE ?
                 ORDER BY eng
-                LIMIT ?, ? '''
+                LIMIT ?, ?
+                '''
             self.con_tro.execute(sql_select, (f'%{tu_khoa}%', bat_dau, so_dong))
         ket_qua = self.con_tro.fetchall()
         return ket_qua
@@ -69,7 +71,8 @@ class CoSoDuLieu:
         '''
         sql_select = '''SELECT *
             FROM CAU_GOC
-            WHERE eng=? '''
+            WHERE eng=?
+            '''
         self.con_tro.execute(sql_select, (eng,))
         ket_qua = self.con_tro.fetchall()
         return ket_qua
@@ -81,7 +84,8 @@ class CoSoDuLieu:
         '''
         sql_select = '''SELECT *
             FROM CAU_GOC
-            WHERE id=? '''
+            WHERE id=?
+            '''
         self.con_tro.execute(sql_select, (id,))
         ket_qua = self.con_tro.fetchall()
         return ket_qua
@@ -95,7 +99,8 @@ class CoSoDuLieu:
             id được tạo ra cuối cùng: int
         '''
         sql_insert = '''INSERT INTO CAU_GOC(eng, vie)
-            VALUES(?,?) '''
+            VALUES(?,?)
+            '''
         self.con_tro.execute(sql_insert, (eng, vie))
         return self.con_tro.lastrowid
         
@@ -107,7 +112,8 @@ class CoSoDuLieu:
         '''
         sql_update = '''UPDATE CAU_GOC
             SET vie = ?, ngay_sua = ?
-            WHERE  id = ? '''
+            WHERE  id = ?
+            '''
         self.con_tro.execute(sql_update, (vie, datetime.now(), id))
         
     def Cap_Nhat_Cau_Goc(self, id, eng, vie):
@@ -120,7 +126,8 @@ class CoSoDuLieu:
             SET eng= ?,
                 vie = ?,
                 ngay_sua = ?
-            WHERE  id = ? '''
+            WHERE  id = ?
+            '''
         self.con_tro.execute(sql_update, (eng, vie, datetime.now(), id))
         
     def Xoa_Cau_Goc(self, id):
@@ -133,7 +140,8 @@ class CoSoDuLieu:
         self.con_tro.execute(sql_delete, (id,))
     
     def Xoa_Cau_Rac(self):
-        '''Xóa câu rác: có tiếng Anh với tiếng Việt giống nhau'''
+        '''Xóa câu rác:
+        - Có tiếng Anh với tiếng Việt giống nhau'''
         sql_delete = '''DELETE FROM CAU_GOC
         WHERE eng = vie
         '''
