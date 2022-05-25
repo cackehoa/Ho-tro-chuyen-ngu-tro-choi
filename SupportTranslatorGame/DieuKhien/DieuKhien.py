@@ -11,8 +11,8 @@ class DieuKhien:
     def Loc_Khoang_Trang(self, chuoi):
         '''Bỏ khoảng trắng thừa và ký tự đặt biệt đầu và cuối chuỗi'''
         #Xóa khoảng trắng đôi
-        ket_qua = chuoi.strip()
-        ket_qua = ' '.join(ket_qua.split())
+        ket_qua = ' '.join(chuoi.split())
+        ket_qua = ket_qua.strip()
         return ket_qua
         
     def Tao_Loc_Moi(self, event=None):
@@ -101,41 +101,67 @@ class DieuKhien:
         self.Lay_Trang_Danh_Sach()
         self.hien_thi.Nhap_Trang_Thai(f'Câu có id={id} được xóa')
         
+    def Luu_Du_Lieu_Vao_Csdl(self, du_lieu, ghi_de = False):
+        '''Nhập danh sách dữ liệu vào csdl
+        Đầu vào:
+            du_lieu: list có định dạng (eng, vie)
+            ghi_de: Boolean #Cho phép ghi đè nội dung đã có trong csdl
+        '''
+        nhap_csdl = 0 #Số lượng câu nhập vào cơ sở dữ liệu
+        bo_qua = 0 #Số lượng câu bỏ qua
+        for cau_goc in du_lieu:
+            eng = self.Loc_Khoang_Trang(cau_goc[0])
+            #Câu tiếng Anh phải có hơn 2 ký tự
+            if len(eng) > 1:
+                cau_eng = self.mo_hinh.csdl.Lay_Eng(eng)
+                #Nếu câu tiếng anh KHÔNG tồn tại thì nhập câu mới (tạm thời KHÔNG ghi đè câu cũ)
+                if len(cau_eng) == 0:
+                    vie = self.Loc_Khoang_Trang(cau_goc[1])
+                    #Câu tiếng Việt ít nhất phải có ít nhất 1 ký tự và khác câu tiếng Anh
+                    if len(vie) != 0 and eng != vie:
+                        #Lưu vào csdl
+                        self.mo_hinh.csdl.Nhap_Cau_Goc(eng, vie)
+                        nhap_csdl +=1
+                        continue
+            bo_qua +=1
+        if nhap_csdl != 0:
+            self.Lay_Trang_Danh_Sach()
+        self.hien_thi.Nhap_Trang_Thai(f'Nhập XUnity: {nhap_csdl} câu, bỏ qua: {bo_qua} câu')
+        
     def Nhap_Tep_XUnity(self):
-        '''Xử lý tiệp loại XUnity'''
+        '''Nhập dữ liệu từ tệp XUnity vào csdl'''
         #Nhập dữ liệu
         ten_tep = self.hien_thi.Hop_Thoai_Mo_Tep()
         self.hien_thi.Nhap_Trang_Thai(f'Đang xử lý tệp: {ten_tep}')
         if ten_tep !='' and self.mo_hinh.tep_tin.Kiem_Tra_Tep_Ton_Tai(ten_tep):
             #Dọc dữ liệu từ tập tin
             du_lieu = self.mo_hinh.tep_tin.Doc_XUnity(ten_tep)
-            nhap_csdl = 0 #Số lượng câu nhập vào cơ sở dữ liệu
-            bo_qua = 0 #Số lượng câu bỏ qua
-            for cau_goc in du_lieu:
-                eng = self.Loc_Khoang_Trang(cau_goc[0])
-                #Câu tiếng Anh phải có hơn 2 ký tự
-                if len(eng) > 1:
-                    cau_eng = self.mo_hinh.csdl.Lay_Eng(eng)
-                    #Nếu câu tiếng anh không tồn tại thì nhập câu mới (tồn tại tạm thời không làm gì hết)
-                    if len(cau_eng) == 0:
-                        vie = self.Loc_Khoang_Trang(cau_goc[1])
-                        #Câu tiếng Việt ít nhất phải có 1 ký tự hoặc khác tiếng Anh
-                        if len(vie) == 0 or eng == vie:
-                            bo_qua +=1
-                        else:
-                            #Lưu vào csdl
-                            self.mo_hinh.csdl.Nhap_Cau_Goc(eng, vie)
-                            nhap_csdl +=1
-                    else:
-                        bo_qua +=1
-            self.Lay_Trang_Danh_Sach()
-            self.hien_thi.Nhap_Trang_Thai(f'Nhập XUnity: {nhap_csdl} câu, bỏ qua: {bo_qua} câu')
+            self.Luu_Du_Lieu_Vao_Csdl(du_lieu)
         else:
-            self.hien_thi.Nhap_Trang_Thai('Không có tệp để xử lý')
+            self.hien_thi.Nhap_Trang_Thai('Không có tệp XUnity để xử lý')
         
     def Nhap_Tep_Json(self):
-        ten_tep = self.hien_thi.Hop_Thoai_Mo_Tep('Json')
+        '''Nhập dữ liệu từ tệp Json vào csdl'''
+        hop_thoai = self.hien_thi.Hop_Thoai_Nhap('Json')
+        print(hop_thoai)
         
+    def Nhap_Tep_Csv(self):
+        '''Nhập dữ liệu từ tệp Csv vào csdl'''
+        hop_thoai = self.hien_thi.Hop_Thoai_Nhap('Csv')
+        if self.mo_hinh.tep_tin.Kiem_Tra_Tep_Ton_Tai(hop_thoai['tep_eng']):
+            #Nếu tệp tiếng Việt không tồn tại
+            du_lieu = []
+            self.hien_thi.Nhap_Trang_Thai(f"Đang xử lý tệp: {hop_thoai['tep_eng']}")
+            if hop_thoai['tep_vie'] == '' or hop_thoai['tep_vie'] == hop_thoai['tep_eng'] or not self.mo_hinh.tep_tin.Kiem_Tra_Tep_Ton_Tai(hop_thoai['tep_vie']):
+                if hop_thoai['cot_eng'] != hop_thoai['cot_vie']:
+                    du_lieu = self.mo_hinh.tep_tin.Doc_Csv(hop_thoai)
+            else: #Tệp tiếng Việt tồn tại
+                self.hien_thi.Nhap_Trang_Thai(f"Đang xử lý tệp: {hop_thoai['tep_vie']}")
+                du_lieu = self.mo_hinh.tep_tin.Doc_2_Csv(hop_thoai)
+            #self.Luu_Du_Lieu_Vao_Csdl(du_lieu)
+        else:
+            self.hien_thi.Nhap_Trang_Thai('Không có tệp Csv để xử lý')
+    
     def Chuyen_Ngu(self, eng):
         '''Cố chuyển câu tiếng Anh sang tiếng Việt nhiều nhất có thể
         Đầu vào:
@@ -149,13 +175,15 @@ class DieuKhien:
                 for cau in cau_eng:
                     return cau[2]
             #Cố gắn tách nhỏ câu ra để dịch
+            #Đây viết bằng đệ quy nên từ từ viết sau
             return '' #Nếu không dịch được trả lại chuỗi rỗng
         return eng
         
     def Xuat_Tep_XUnity(self):
-        ten_tep = self.hien_thi.Hop_Thoai_Xuat('XUnity')
-        tep_nguon = ten_tep[0]
-        tep_dich = ten_tep[1]
+        '''Dịch những câu có trong tệp nguồn rồi xuất ra tệp đích'''
+        hop_thoai = self.hien_thi.Hop_Thoai_Xuat('XUnity')
+        tep_nguon = hop_thoai[0]
+        tep_dich = hop_thoai[1]
         if len(tep_nguon) == 0:
             return self.hien_thi.Nhap_Trang_Thai('Không có tệp nguồn để xử lý')
         if len(tep_dich) == 0:
@@ -169,21 +197,27 @@ class DieuKhien:
         for dong in du_lieu:
             cau_eng = self.Loc_Khoang_Trang(dong[0])
             if len(cau_eng) == 0:
-                break
+                continue #Bỏ qua câu rỗng
             cau_vie = self.Loc_Khoang_Trang(dong[1])
             vie = self.Chuyen_Ngu(cau_eng)
             #Nếu không dịch được thì trả lại kết quả cũ hoặc chính câu tiếng Anh
             if len(vie) == 0:
                 if len(cau_vie) == 0:
-                    ket_qua.append((dong[0], cau_eng))
+                    ket_qua.append((dong[0], cau_eng)) #Câu tiếng Anh
                 else:
-                    ket_qua.append((dong[0], cau_vie))
+                    ket_qua.append((dong[0], cau_vie)) #Kết quả cũ
             else:
-                ket_qua.append((dong[0], vie))
+                ket_qua.append((dong[0], vie)) #Dịch
         self.hien_thi.Nhap_Trang_Thai(f'Đang xuất dữ liệu ra tệp: {tep_dich}')
         self.mo_hinh.tep_tin.Ghi_XUnity(tep_dich, ket_qua)
         self.hien_thi.Nhap_Trang_Thai('Xuất dữ liệu kiểu XUnity ra tệp thành công')
         
     def Xuat_Tep_Json(self):
-        ten_tep = self.hien_thi.Hop_Thoai_Xuat('Json')
-        print(ten_tep)
+        '''Dịch những câu có trong tệp nguồn rồi xuất ra tệp đích'''
+        hop_thoai = self.hien_thi.Hop_Thoai_Xuat('Json')
+        print(hop_thoai)
+        
+    def Xuat_Tep_Csv(self):
+        '''Dịch những câu có trong tệp nguồn rồi xuất ra tệp đích'''
+        hop_thoai = self.hien_thi.Hop_Thoai_Xuat('Csv')
+        print(hop_thoai)
