@@ -57,19 +57,17 @@ class HienThi(ttk.Frame):
     def Tao_Bo_Loc(self):
         '''Khởi tạo bộ lọc'''
         #Tạo frame để chứa bộ lọc
-        self.frame_loc = ttk.Frame(self.tk_goc)
-        self.frame_loc.grid(row=0, column=0, columnspan=2, padx=5, pady=5, sticky='nsew')
+        frame_loc = ttk.Frame(self.tk_goc)
+        frame_loc.grid(row=0, column=0, columnspan=2, padx=5, pady=5, sticky='nsew')
         #Tạo nhãn lọc
-        self.label_loc = ttk.Label(self.frame_loc, text='Từ khóa:')
-        self.label_loc.pack(side='left', fill='x')
+        ttk.Label(frame_loc, text='Từ khóa:').pack(side='left', fill='x')
         #Tạo ô nhập từ khóa
-        self.entry_loc = ttk.Entry(self.frame_loc, textvariable='', width=40)
+        self.entry_loc = ttk.Entry(frame_loc, textvariable='', width=40)
         self.entry_loc.pack(side='left', fill='x')
         self.entry_loc.bind('<Return>', self.dieu_khien.Tao_Loc_Moi)
         self.entry_loc.focus()
         #Tạo nút lọc
-        self.button_loc = ttk.Button(self.frame_loc, text='Lọc', command=self.dieu_khien.Tao_Loc_Moi)
-        self.button_loc.pack(side='left', fill='x')
+        ttk.Button(frame_loc, text='Lọc', command=self.dieu_khien.Tao_Loc_Moi).pack(side='left', fill='x')
         
     def Lay_Tu_Khoa(self):
         '''Trả lại từ khóa được nhập'''
@@ -86,20 +84,19 @@ class HienThi(ttk.Frame):
         self.treeview_danh_sach.heading('eng', text='Câu gốc')
         self.treeview_danh_sach.heading('vie', text='Câu dịch')
         self.treeview_danh_sach.grid(row=1, column=0, columnspan=2, padx=5, pady=5, sticky='nsew')
-        self.frame_danh_sach_button = ttk.Frame(self.tk_goc)
-        self.frame_danh_sach_button.grid(row=3, column=0, columnspan=2, padx=5, pady=5, sticky='nsew')
-        self.frame_danh_sach_con = ttk.Frame(self.frame_danh_sach_button)
-        self.frame_danh_sach_con.pack()
+        frame_danh_sach_button = ttk.Frame(self.tk_goc)
+        frame_danh_sach_button.grid(row=3, column=0, columnspan=2, padx=5, pady=5, sticky='nsew')
+        #Dùng thủ thuật để canh giữa
+        frame_danh_sach_con = ttk.Frame(frame_danh_sach_button)
+        frame_danh_sach_con.pack()
         #Nút bấm trước
-        self.button_truoc = ttk.Button(self.frame_danh_sach_con, text='<', command=lambda:self.dieu_khien.Lay_Trang_Danh_Sach('trai'))
-        self.button_truoc.pack(side='left')
+        ttk.Button(frame_danh_sach_con, text='<', command=lambda:self.dieu_khien.Lay_Trang_Danh_Sach('trai')).pack(side='left')
         #Trang hiện tại
-        self.entry_trang_hien_tai = ttk.Entry(self.frame_danh_sach_con, textvariable='', width=10, justify='center')
+        self.entry_trang_hien_tai = ttk.Entry(frame_danh_sach_con, textvariable='', width=10, justify='center')
         self.entry_trang_hien_tai.pack(side='left')
         self.entry_trang_hien_tai.bind('<Return>',lambda event:self.dieu_khien.Lay_Trang_Danh_Sach())
         #Nút bấm sau
-        self.button_sau = ttk.Button(self.frame_danh_sach_con, text='>', command=lambda:self.dieu_khien.Lay_Trang_Danh_Sach('phai'))
-        self.button_sau.pack(side='left')
+        ttk.Button(frame_danh_sach_con, text='>', command=lambda:self.dieu_khien.Lay_Trang_Danh_Sach('phai')).pack(side='left')
         
     def Lay_Trang_Hien_Tai(self):
         '''Lấy trang hiện tại đang nhập'''
@@ -124,42 +121,29 @@ class HienThi(ttk.Frame):
     def Tao_Bo_Nhap(self):
         '''Khởi tạo bộ hiển thị và nhập liệu'''
         #Tạo frame để chứa bộ nhập
-        self.frame_nhap = ttk.Frame(self.tk_goc)
-        self.frame_nhap.grid(row=4, column=0, padx=5, pady=5, sticky='nsew')
-        #Tạo nhãn id
-        self.label_id = ttk.Label(self.frame_nhap, text='ID:')
-        self.label_id.grid(row=0, column=0, sticky='e')
-        #Tạo ô text nhập id
-        self.text_id = Text(self.frame_nhap, height = 1, width = 40, bg='light green')
+        frame_nhap = ttk.Frame(self.tk_goc)
+        frame_nhap.grid(row=4, column=0, padx=5, pady=5, sticky='nsew')
+        #Nhập id
+        ttk.Label(frame_nhap, text='ID:').grid(row=0, column=0, sticky='e')
+        self.text_id = Text(frame_nhap, height = 1, width = 40, bg='light green')
         self.text_id.insert('end', '0')
         self.text_id.configure(state='disabled') #self.text_id.configure(state='normal')
         self.text_id.grid(row=0, column=1, sticky='nsew')
-        #Tạo nhãn eng
-        self.label_eng = ttk.Label(self.frame_nhap, text='Tiếng Anh:')
-        self.label_eng.grid(row=1, column=0, sticky='e')
-        #Tạo ô text nhập eng
-        self.text_eng = Text(self.frame_nhap, height = 4, width = 40)
+        #Nhập tiếng Anh
+        ttk.Label(frame_nhap, text='Tiếng Anh:').grid(row=1, column=0, sticky='e')
+        self.text_eng = Text(frame_nhap, height = 4, width = 40)
         self.text_eng.grid(row=1, column=1, sticky='nsew')
-        #Tạo nhãn vie
-        self.label_vie = ttk.Label(self.frame_nhap, text='Tiếng Việt:')
-        self.label_vie.grid(row=2, column=0, sticky='e')
-        #Tạo ô text nhập vie
-        self.text_vie = Text(self.frame_nhap, height = 4, width = 40)
+        #Nhập tiếng Việt
+        ttk.Label(frame_nhap, text='Tiếng Việt:').grid(row=2, column=0, sticky='e')
+        self.text_vie = Text(frame_nhap, height = 4, width = 40)
         self.text_vie.grid(row=2, column=1, sticky='nsew')
         #Tạo frame để chứa nút bấm bộ nhập
-        self.frame_nhap_button = ttk.Frame(self.tk_goc)
-        self.frame_nhap_button.grid(row=4, column=1, padx=5, pady=5, sticky='nsew')
-        #Tạo nút bấm Chọn
-        self.button_chon = ttk.Button(self.frame_nhap_button, text='Chọn', command=self.Double_Click_Danh_Sach)
-        self.button_chon.grid(row=0, column=0, sticky='nsew')
-        #Tạo nút bấm Tạo mới
-        self.button_tao_moi = ttk.Button(self.frame_nhap_button, text='Tạo mới', command=self.dieu_khien.Tao_Moi_Cau_Goc)
-        self.button_tao_moi.grid(row=1, column=0, sticky='nsew')
-        #Tạo nút bấm Cập nhật
-        self.button_cap_nhat = ttk.Button(self.frame_nhap_button, text='Cập nhật', command=self.dieu_khien.Cap_Nhat_Cau_Goc)
-        self.button_cap_nhat.grid(row=2, column=0, sticky='nsew')
-        self.button_xoa = ttk.Button(self.frame_nhap_button, text='Xóa', command=self.dieu_khien.Xoa_Cau_Goc)
-        self.button_xoa.grid(row=5, column=0, sticky='nsew')
+        frame_nhap_button = ttk.Frame(self.tk_goc)
+        frame_nhap_button.grid(row=4, column=1, padx=5, pady=5, sticky='nsew')
+        ttk.Button(frame_nhap_button, text='Chọn', command=self.Double_Click_Danh_Sach).pack()
+        ttk.Button(frame_nhap_button, text='Tạo mới', command=self.dieu_khien.Tao_Moi_Cau_Goc).pack()
+        ttk.Button(frame_nhap_button, text='Cập nhật', command=self.dieu_khien.Cap_Nhat_Cau_Goc).pack()
+        ttk.Button(frame_nhap_button, text='Xóa', command=self.dieu_khien.Xoa_Cau_Goc).pack()
     
     def Cap_Nhat_Txt_ID(self, id):
         '''Mở và đóng không cho chỉnh sửa id bằng tay
@@ -248,7 +232,7 @@ class HienThi(ttk.Frame):
             (tep_nguon, tep_dich)
         '''
         hop_thoai = HopThoaiXuat(self, loai_tep)
-        return (hop_thoai.tep_nguon, hop_thoai.tep_dich)
+        return hop_thoai.du_lieu
         
     def Hop_Thoai_Nhap(self, loai_tep = 'XUnity'):
         '''Mở hộp thoại lấy tệp nguồn và đích
