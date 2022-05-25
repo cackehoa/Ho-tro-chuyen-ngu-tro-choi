@@ -34,7 +34,7 @@ class CoSoDuLieu:
         return ket_qua;
         
     def Tao_Bang(self):
-        '''Tạo bảng tương ứng'''
+        '''Tạo bảng tương ứng trong csdl'''
         sql_create = '''CREATE TABLE CAU_GOC (
         id INTEGER  PRIMARY KEY AUTOINCREMENT,
         eng TEXT NOT NULL,
@@ -131,6 +131,13 @@ class CoSoDuLieu:
         sql_delete = '''DELETE FROM CAU_GOC
         WHERE  id = ? '''
         self.con_tro.execute(sql_delete, (id,))
+    
+    def Xoa_Cau_Rac(self):
+        '''Xóa câu rác: có tiếng Anh với tiếng Việt giống nhau'''
+        sql_delete = '''DELETE FROM CAU_GOC
+        WHERE eng = vie
+        '''
+        self.con_tro.execute(sql_delete)
         
     def __del__(self):
         '''Hàm hủy dùng để ngắt kết nối đến cơ sở dữ liệu '''
