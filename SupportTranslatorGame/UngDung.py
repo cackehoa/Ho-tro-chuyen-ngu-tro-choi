@@ -14,7 +14,7 @@ class UngDung(tk.Tk):
         #Tiêu đề
         self.title('Hỗ trợ chuyển ngữ trò chơi')
         #Kích thước GUI
-        self.geometry('485x495')
+        #self.geometry('485x495')
         self.resizable(False, False)
         hien_thi = HienThi(self)
         mo_hinh = MoHinh(tep_csdl)
