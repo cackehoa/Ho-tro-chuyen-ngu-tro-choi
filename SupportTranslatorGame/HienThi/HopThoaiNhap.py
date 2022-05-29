@@ -15,7 +15,8 @@ class HopThoaiNhap(Hop_thoai):
             'cot_eng' : 1,
             'cot_khoa_eng' : 0,
             'cot_vie' : 2,
-            'cot_khoa_vie' : 0
+            'cot_khoa_vie' : 0,
+            'dau_phan_cach': ','
             }
         super().__init__(tk_goc, 'Nhập ' + tieu_de)
         
@@ -42,13 +43,19 @@ class HopThoaiNhap(Hop_thoai):
             self.entry_cot_khoa_eng.pack(side='right')
             ttk.Label(frame_cot_eng, text='Cột khóa tiếng Anh:').pack(side='right')
             frame_cot_eng.pack(side='top', fill='x')
+            frame_dau_phan_cach = ttk.Frame(frame_chinh)
+            ttk.Label(frame_dau_phan_cach, text='Dấu phân cách:').pack(side='left')
+            self.entry_dau_phan_cach = ttk.Entry(frame_dau_phan_cach, width=5, justify='center')
+            self.entry_dau_phan_cach.delete(0, 'end')
+            self.entry_dau_phan_cach.insert('end', self.du_lieu['dau_phan_cach'])
+            self.entry_dau_phan_cach.pack(side='left')
+            frame_dau_phan_cach.pack(side='top', fill='x')
         #Nhập tệp tiếng Việt
         ttk.Label(frame_chinh, width=25, text='Tệp tiếng Việt').pack(side='top', fill='x')
         frame_tep_vie = ttk.Frame(frame_chinh)
         self.entry_tep_vie = ttk.Entry(frame_tep_vie, width=40)
         self.entry_tep_vie.pack(side='left')
         ttk.Button(frame_tep_vie, text='Duyệt...', command=self.Duyet_Tep_Vie).pack(side='left')
-        #self.button_tep_vie.pack(side='left')
         frame_tep_vie.pack(side='top', fill='x')
         #Cột tiếng Việt Csv
         if self.tieu_de == 'Csv':
@@ -92,24 +99,26 @@ class HopThoaiNhap(Hop_thoai):
             self.entry_tep_vie.insert('end', ten_tep)
             
     def Button_Nhap(self):
-        '''Trả lại kết quả'''
+        '''Đọc thông tin được nhập vào du_lieu'''
         self.du_lieu['tep_eng'] = self.entry_tep_eng.get()
         self.du_lieu['tep_vie'] = self.entry_tep_vie.get()
-        try:
-            self.du_lieu['cot_eng'] = int(eval(str(self.entry_cot_eng.get())))
-        except:
-            pass
-        try:
-            self.du_lieu['cot_vie'] = int(eval(str(self.entry_cot_vie.get())))
-        except:
-            pass
-        try:
-            self.du_lieu['cot_khoa_eng'] = int(eval(str(self.entry_cot_khoa_eng.get())))
-        except:
-            pass
-        try:
-            self.du_lieu['cot_khoa_vie'] = int(eval(str(self.entry_cot_khoa_vie.get())))
-        except:
-            pass
-        self.du_lieu['ghi_de'] = self.ghi_de.get()
+        if self.tieu_de == 'Csv':
+            self.du_lieu['dau_phan_cach'] = self.entry_dau_phan_cach.get()
+            try:
+                self.du_lieu['cot_eng'] = int(self.entry_cot_eng.get())
+            except:
+                pass
+            try:
+                self.du_lieu['cot_vie'] = int(self.entry_cot_vie.get())
+            except:
+                pass
+            try:
+                self.du_lieu['cot_khoa_eng'] = int(self.entry_cot_khoa_eng.get())
+            except:
+                pass
+            try:
+                self.du_lieu['cot_khoa_vie'] = int(self.entry_cot_khoa_vie.get())
+            except:
+                pass
+        self.du_lieu['ghi_de'] = int(self.ghi_de.get())
         self.destroy()

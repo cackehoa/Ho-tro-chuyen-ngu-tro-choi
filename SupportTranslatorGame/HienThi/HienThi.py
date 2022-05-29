@@ -1,7 +1,7 @@
 #HienThi.py
 #View: Quản lý hiển thị ra cho người sử dụng tương tác
 
-from tkinter import ttk, Text, Menu
+from tkinter import ttk, Text, Menu#,Toplevel
 from tkinter import filedialog as Hop_Thoai_Tep
 from tkinter import messagebox as Hop_Thoai_Thong_Bao
 from .HopThoaiXuat import HopThoaiXuat
@@ -31,11 +31,13 @@ class HienThi(ttk.Frame):
         self.menubar = Menu(self.tk_goc)
         #Tạo menu hành động
         menu_hanh_dong = Menu(self.menubar, tearoff=0)
+        menu_hanh_dong.add_command(label='Lọc', command=self.dieu_khien.Tao_Loc_Moi)
+        menu_hanh_dong.add_command(label='Trang trước', command=lambda:self.dieu_khien.Lay_Trang_Danh_Sach('trang_truoc'))
+        menu_hanh_dong.add_command(label='Trang sau', command=lambda:self.dieu_khien.Lay_Trang_Danh_Sach('trang_sau'))
+        menu_hanh_dong.add_separator()
         menu_hanh_dong.add_command(label='Chọn', command=self.Double_Click_Danh_Sach)
         menu_hanh_dong.add_command(label='Tạo mới', command=self.dieu_khien.Tao_Moi_Cau_Goc)
         menu_hanh_dong.add_command(label='Cập nhật', command=self.dieu_khien.Cap_Nhat_Cau_Goc)
-        #menu_hanh_dong.add_command(label='Lưu dịch mới', command=self.Button_Dich_Moi_Clicked)
-        #menu_hanh_dong.add_command(label='Dịch khác', command=self.Button_Dich_Khac_Clicked)
         menu_hanh_dong.add_command(label='Xóa', command=self.dieu_khien.Xoa_Cau_Goc)
         menu_hanh_dong.add_separator()
         menu_hanh_dong.add_command(label='Thoát', command=self.tk_goc.quit)
@@ -90,13 +92,13 @@ class HienThi(ttk.Frame):
         frame_danh_sach_con = ttk.Frame(frame_danh_sach_button)
         frame_danh_sach_con.pack()
         #Nút bấm trước
-        ttk.Button(frame_danh_sach_con, text='<', command=lambda:self.dieu_khien.Lay_Trang_Danh_Sach('trai')).pack(side='left')
+        ttk.Button(frame_danh_sach_con, text='<', command=lambda:self.dieu_khien.Lay_Trang_Danh_Sach('trang_truoc')).pack(side='left')
         #Trang hiện tại
         self.entry_trang_hien_tai = ttk.Entry(frame_danh_sach_con, textvariable='', width=10, justify='center')
         self.entry_trang_hien_tai.pack(side='left')
         self.entry_trang_hien_tai.bind('<Return>',lambda event:self.dieu_khien.Lay_Trang_Danh_Sach())
         #Nút bấm sau
-        ttk.Button(frame_danh_sach_con, text='>', command=lambda:self.dieu_khien.Lay_Trang_Danh_Sach('phai')).pack(side='left')
+        ttk.Button(frame_danh_sach_con, text='>', command=lambda:self.dieu_khien.Lay_Trang_Danh_Sach('trang_sau')).pack(side='left')
         
     def Lay_Trang_Hien_Tai(self):
         '''Lấy trang hiện tại đang nhập'''
@@ -245,3 +247,5 @@ class HienThi(ttk.Frame):
     def Hop_Thoai_Thong_Bao(self, noi_dung):
         '''Bật lên thông báo có nội dung là noi_dung'''
         Hop_Thoai_Thong_Bao.showinfo('Thông báo', noi_dung)
+        
+    
