@@ -11,12 +11,7 @@ class HopThoaiNhap(Hop_thoai):
         self.ghi_de = IntVar()
         self.du_lieu = {'tep_eng' : '',
             'tep_vie' : '',
-            'ghi_de' : 0,
-            'cot_eng' : 1,
-            'cot_khoa_eng' : 0,
-            'cot_vie' : 2,
-            'cot_khoa_vie' : 0,
-            'dau_phan_cach': ','
+            'ghi_de' : 0
             }
         super().__init__(tk_goc, 'Nhập ' + tieu_de)
         
@@ -34,10 +29,12 @@ class HopThoaiNhap(Hop_thoai):
             frame_cot_eng = ttk.Frame(frame_chinh)
             ttk.Label(frame_cot_eng, text='Cột tiếng Anh:').pack(side='left')
             self.entry_cot_eng = ttk.Entry(frame_cot_eng, width=5, justify='center')
+            self.du_lieu['cot_eng'] = 1
             self.entry_cot_eng.delete(0, 'end')
             self.entry_cot_eng.insert('end', self.du_lieu['cot_eng'])
             self.entry_cot_eng.pack(side='left')
             self.entry_cot_khoa_eng = ttk.Entry(frame_cot_eng, width=5, justify='center')
+            self.du_lieu['cot_khoa_eng'] = 0
             self.entry_cot_khoa_eng.delete(0, 'end')
             self.entry_cot_khoa_eng.insert('end', self.du_lieu['cot_khoa_eng'])
             self.entry_cot_khoa_eng.pack(side='right')
@@ -46,6 +43,7 @@ class HopThoaiNhap(Hop_thoai):
             frame_dau_phan_cach = ttk.Frame(frame_chinh)
             ttk.Label(frame_dau_phan_cach, text='Dấu phân cách:').pack(side='left')
             self.entry_dau_phan_cach = ttk.Entry(frame_dau_phan_cach, width=5, justify='center')
+            self.du_lieu['dau_phan_cach'] = ','
             self.entry_dau_phan_cach.delete(0, 'end')
             self.entry_dau_phan_cach.insert('end', self.du_lieu['dau_phan_cach'])
             self.entry_dau_phan_cach.pack(side='left')
@@ -62,10 +60,12 @@ class HopThoaiNhap(Hop_thoai):
             frame_cot_vie = ttk.Frame(frame_chinh)
             ttk.Label(frame_cot_vie, text='Cột tiếng Việt:').pack(side='left')
             self.entry_cot_vie = ttk.Entry(frame_cot_vie, width=5, justify='center')
+            self.du_lieu['cot_vie'] = 2
             self.entry_cot_vie.delete(0, 'end')
             self.entry_cot_vie.insert('end', self.du_lieu['cot_vie'])
             self.entry_cot_vie.pack(side='left')
             self.entry_cot_khoa_vie = ttk.Entry(frame_cot_vie, width=5, justify='center')
+            self.du_lieu['cot_khoa_vie'] = 0
             self.entry_cot_khoa_vie.delete(0, 'end')
             self.entry_cot_khoa_vie.insert('end', self.du_lieu['cot_khoa_vie'])
             self.entry_cot_khoa_vie.pack(side='right')

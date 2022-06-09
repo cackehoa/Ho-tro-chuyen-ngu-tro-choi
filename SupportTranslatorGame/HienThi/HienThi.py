@@ -54,6 +54,10 @@ class HienThi(ttk.Frame):
         #menu_xuat.add_command(label='Json', command=self.dieu_khien.Xuat_Tep_Json)
         menu_xuat.add_command(label='XUnity', command=self.dieu_khien.Xuat_Tep_XUnity)
         self.menubar.add_cascade(label='Xuất', menu=menu_xuat)
+        #Tạo menu công cụ
+        menu_cong_cu = Menu(self.menubar, tearoff=0)
+        menu_cong_cu.add_command(label='Nén Gzip', command=self.dieu_khien.Nen_Tep_Tin)
+        self.menubar.add_cascade(label='Công cụ', menu=menu_cong_cu)
         self.tk_goc.config(menu=self.menubar)
         
     def Tao_Bo_Loc(self):
