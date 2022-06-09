@@ -24,6 +24,7 @@ thành
 ````Toàn màn hình````
 - Dịch được các câu cơ bản chính xác theo ý bạn vì bạn đã lưu nó vào cơ sở dữ liệu
 - Giúp dịch nhanh bản cập nhật mới nhất bằng cách học bản dịch trước đó và để lại các thay đổi chưa dịch
+- Giúp bạn tạo ra bản dịch ít lỗi nhất
 - Cùng một câu có thể cho phép bạn có nhiều bản dịch và chọn 1 phiên bản mà bạn cho là ok nhất (mặc định là bản dịch đầu tiên nhập vào, mới lên ý tưởng máy học AI chưa phát triển)
 - Có thể share cơ sở dữ liệu lẫn nhau một cách đơn giản (chỉ copy tệp database.db cho nhau thôi)
 
@@ -34,6 +35,7 @@ thành
 - Khi tự học không xác định được câu dịch đúng và sai. Mình sẽ để bản dịch có sẵn thành mặc định và bạn có thể tự chọn bản dịch bạn cho là hay nhất nếu muốn.
 - Không hỗ trợ nhiều ngôn ngữ (Thay vì Anh-Việt bạn có thể sử dụng nó như Trung-Việt, Hàn-Việt,Việt-Pháp tùy bạn muốn nhưng mình đề nghị bạn không nên dùng đa ngôn ngữ kiểu Anh+Trung+Hàn - Việt vì nó không tối ưu và chạy rất chậm và làm cơ sở dữ liệu phồng to)
 - Không hỗ trợ nhiều ngành (tốt nhất bạn nên tạo nó cho một ngành biệt lập nào đó thì bản dịch sẽ tốt nhất có thể theo ngành ấy)
+- Chạy khá chậm do không viết chạy trên nhiều luồng (thread) đây cũng là hạn chế của [SQLite](https://www.sqlite.org/) và trình độ của mình
 
 # Ngôn ngữ lập trình
 Tại sao chọn [Python](https://www.python.org/): vì nó khá là đơn giản và tiện (được hỗ trợ rất nhiều và không quá phức tạp lại hỗ trợ unicode)
@@ -49,6 +51,8 @@ Mình chọn [SQLite](https://www.sqlite.org/) vì nó đơn giản và tiện (
 
 Mình nghĩ sau này sẽ viết code để trộn 2 cơ sở dữ liệu lại với nhau thành một cơ sở dữ liệu mới tổng hợp những gì đã có sẵn (mới lên ý tưởng, giờ chưa đâu)
 
+Tệp cơ sở dữ liệu mình share trên này đã nhập một số kết quả việt hoa một số game của mình.
+
 # Mô hình MVC:
 Mình dự tính sẽ phát triển ứng dụng nhiều hơn nếu cần nên mình sử dụng mô hình MVC và hướng đối tượng
 
@@ -61,24 +65,39 @@ Hiện tại mới mới bắt đầu viết nên tạm thời sử dụng thư 
 Mình phát triển cho chính mình sử dụng nên tên biến, đối tượng, lớp, ngôn ngữ hiển thị - chú thích đều là tiếng Việt (chưa có ý định đa ngôn ngữ hóa và nói thật là mình rất ngu tiếng Anh nên không đặt tên biến là tiếng Anh vì có thể sau này mình không nhớ biến đó tiếng Anh là cái quái gì)
 
 # Tập tin & định dạng hỗ trợ:
-- [Json](https://www.json.org/) (\*.json): Ví dụ
+## 1. [Json](https://www.json.org/) (\*.json):
+Ví dụ
 ````
 {
-	'id': 'cackehoa',
-	'name': 'Trung Hiếu'
+	'English': 'Tiếng Anh',
+	'Hello': 'Xin chào'
 }
 ````
-- CSV (\*.csv): Ví dụ
+
+Tôi đã gặp khi việt hóa game: Subnautica, [Subnautica below zero](https://github.com/cackehoa/Subnautica-Below-Zero-viet-hoa), [Stonehearth](https://github.com/cackehoa/Mod-Stonehearth-viet-hoa)
+## 2. CSV (\*.csv):
+Ví dụ
 ````
 id,eng,vie
-text,English,"Tiếng Việt"
+language,English,Tiếng Việt
 ````
-- XUnity (\*.txt): Ví dụ
+
+
+Biến thể thường hay thấy khi mình dịch game:
+````
+id*eng*vie
+language*English*Tiếng Việt
+````
+
+Tôi đã gặp khi việt hóa game: [Surviving Mars](https://github.com/cackehoa/Mod-Surviving-Mars-Viet-Hoa), thường các game unity có tệp loại textaset
+## 3. XUnity (\*.txt):
+Ví dụ
 ````
 English=Tiếng Anh
 Hello=Xin chào
 ````
 
+Tôi đã gặp khi việt hóa game: DoorKickers, [Car Mechanic Simulator](https://github.com/cackehoa/Car-Mechanic-Simulator-2018-Mercedes-Benz-viet-hoa)
 # Liên lạc và ủng hộ
 - Ủng hộ tại: [Playerduo](https://playerduo.com/cackehoa)
 - Fanpage: [fackebook](https://www.facebook.com/cackehoa)
