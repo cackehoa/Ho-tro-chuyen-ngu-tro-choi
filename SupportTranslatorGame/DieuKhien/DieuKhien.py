@@ -1,5 +1,6 @@
 #DieuKhien.py
 #Controller: Điều khiển những tác của hiển thị với mô hình
+import re
 
 class DieuKhien:
     def __init__(self, mo_hinh, hien_thi):
@@ -54,7 +55,9 @@ class DieuKhien:
         #Số dòng mặc định lấy ra là 10
         so_dong = 10
         bat_dau = (trang-1)*so_dong
-        du_lieu = self.mo_hinh_csdl.Danh_Sach_Loc(bat_dau, so_dong, self.tu_khoa)
+        sap_xep = 'eng'
+        thu_tu = 'ASC'
+        du_lieu = self.mo_hinh_csdl.Danh_Sach_Loc(bat_dau, so_dong, sap_xep, thu_tu, self.tu_khoa)
         self.hien_thi.Nhap_Danh_Sach_Moi(du_lieu)
         
     def Tao_Moi_Cau_Goc(self):
@@ -234,7 +237,8 @@ class DieuKhien:
                             if vie[:1] == dau_boc:
                                 return vie[1:] #Trừ đầu
                         return vie
-                dau_caus = ['\n', '\\n', '<br>', '<hr>', '<newline>', '.', ';', '!', '?', '…', ':', ','] #Điểm tách là dấu câu
+                #Chia nhỏ câu theo dấu câu
+                dau_caus = ['\n', '\\n', '.', '!', '?', ';', '…', ':'] #Điểm tách là dấu câu
                 for dau_cau in dau_caus:
                     #Tách tại điểm tách và 1 ký tự rỗng theo sau
                     dau_cau_rong = dau_cau + ' '
@@ -253,6 +257,7 @@ class DieuKhien:
                         if vie[-do_dai:] == dau_cau:
                             return vie[:-do_dai]
                         return vie
+                #Tách câu theo dấu câu để cố dịch thử
                 dau_bocs.append('-')
                 for dau_boc in dau_bocs:
                     dau_cau_rong = ' ' + dau_cau + ' '
@@ -266,6 +271,11 @@ class DieuKhien:
                         return Tach_Dich(eng, dau_cau_rong)
                     if eng.find(dau_boc) != -1:
                         return Tach_Dich(eng, dau_boc)
+                #Chia nhỏ theo thẻ html
+                mau_html = '(<[\S\s]+>)'
+                chuoi_tach = re.findall(mau_html, eng)
+                for chuoi in chuoi_tach:
+                    return Tach_Dich(eng, chuoi)
         return eng #Trả lại câu tiếng Anh
         
     def Xuat_Tep_XUnity(self):
@@ -303,25 +313,38 @@ class DieuKhien:
             return self.hien_thi.Nhap_Trang_Thai('Không có tệp nguồn để xử lý')
         if len(hop_thoai['tep_dich']) == 0:
             return self.hien_thi.Nhap_Trang_Thai('Không có tệp đích để xuất ra')
-        du_lieu_csv = self.mo_hinh_tep.Doc_Csv(hop_thoai['tep_nguon'])
-        tong_cot = len(du_lieu_csv['tieu_de'])
-        if hop_thoai['cot_eng'] >= tong_cot:
+        du_lieu_csv = self.mo_hinh_tep.Doc_Csv(hop_thoai['tep_nguon'], hop_thoai['dau_phan_cach'])
+        so_cot_tieu_de = len(du_lieu_csv['tieu_de'])
+        if hop_thoai['cot_eng'] >= so_cot_tieu_de:
             return self.hien_thi.Nhap_Trang_Thai('Cột tiếng Anh không tồn tại')
-        kq_du_lieu = []
-        if hop_thoai['cot_vie'] < tong_cot:
-            for dong in du_lieu_csv['du_lieu']:
-                cau_eng = self.Loc_Khoang_Trang(dong[hop_thoai['cot_eng']])
-                vie = self.Chuyen_Ngu(cau_eng, hop_thoai['co_dich'])
-                dong[hop_thoai['cot_vie']] = vie
-                kq_du_lieu.append(dong)
-        else:
+        #Thêm mã 'vi' vào cuối tiêu đề
+        if hop_thoai['cot_vie'] >= so_cot_tieu_de:
             du_lieu_csv['tieu_de'].append('vi')
-            hop_thoai['cot_vie'] = tong_cot
-            for dong in du_lieu_csv['du_lieu']:
-                cau_eng = self.Loc_Khoang_Trang(dong[hop_thoai['cot_eng']])
-                vie = self.Chuyen_Ngu(cau_eng, hop_thoai['co_dich'])
+        kq_du_lieu = []
+        for dong in du_lieu_csv['du_lieu']:
+            so_dong = len(dong)
+            #Cột tiếng Anh không tồn tại
+            if hop_thoai['cot_eng'] >= so_dong:
+                continue
+            cau_eng = self.Loc_Khoang_Trang(dong[hop_thoai['cot_eng']])
+            vie = self.Chuyen_Ngu(cau_eng, hop_thoai['co_dich'])
+            #Nếu cột Việt không tồn tại thì thêm vào cuối
+            if hop_thoai['cot_vie'] < so_dong:
+                dong[hop_thoai['cot_vie']] = vie
+            else:
                 dong.append(vie)
-                kq_du_lieu.append(dong)
+            kq_du_lieu.append(dong)
         du_lieu_csv['du_lieu'] = kq_du_lieu
         self.mo_hinh_tep.Ghi_Csv(hop_thoai['tep_dich'], du_lieu_csv, hop_thoai['dau_phan_cach'])
         self.hien_thi.Nhap_Trang_Thai('Xuất dữ liệu kiểu Csv ra tệp thành công')
+        
+    def Nen_Tep_Tin(self):
+        '''Hàm chuyên nén tệp thành gzip'''
+        hop_thoai = self.hien_thi.Hop_Thoai_Xuat('Gzip')
+        if not self.mo_hinh_tep.Kiem_Tra_Tep_Ton_Tai(hop_thoai['tep_nguon']):
+            return self.hien_thi.Nhap_Trang_Thai('Tệp nguồn không tồn tại')
+        if len(hop_thoai['tep_dich']) == 0:
+            return self.hien_thi.Nhap_Trang_Thai('Không có tệp đích')
+        self.mo_hinh_tep.Nen_Tep_Gzip(hop_thoai['tep_nguon'],hop_thoai['tep_dich'])
+        self.hien_thi.Nhap_Trang_Thai('Nén dữ liệu thành công')
+        
