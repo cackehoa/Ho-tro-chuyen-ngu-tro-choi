@@ -4,6 +4,8 @@
 import os
 import json
 import csv
+import shutil
+import gzip
 
 class TepTin:
     '''Quản lý vấn đề xuất nhập tệp tin'''
@@ -27,6 +29,12 @@ class TepTin:
         '''
         ket_qua = []
         #Nếu tệp tồn tại thì đọc từng dòng
+        def Chuyen_Ky_Tu(chuoi):
+            ky_tus = {'\n' : '\\n', '\t' : '\\t', '\r' : '\\r'}
+            ket_qua = chuoi
+            for khoa in ky_tus:
+                ket_qua = khoa.join(ket_qua.split(ky_tus[khoa]))
+            return ket_qua
         with open(ten_tep, 'r', encoding = 'utf-8') as doc_tep:
             for dong in doc_tep:
                 tach = []
@@ -36,8 +44,11 @@ class TepTin:
                 #Nếu chí có khóa và ngôn ngữ
                 so_luong = len(tach)
                 if so_luong == 1:
+                    eng = Chuyen_Ky_Tu(tach[0])
                     ket_qua.append((tach[0], ''))
-                elif len(tach) > 1:
+                elif so_luong > 1:
+                    eng = Chuyen_Ky_Tu(tach[0])
+                    vie = Chuyen_Ky_Tu(tach[1])
                     ket_qua.append((tach[0], tach[1]))
         return ket_qua
         
@@ -51,8 +62,9 @@ class TepTin:
         with open(ten_tep, 'w', encoding = 'utf-8') as ghi_tep:
             for dong in du_lieu:
                 #Loại bỏ ký tự xuống dòng '\n'
+                eng = '\\n'.join(dong[0].split('\n'))
                 vie = '\\n'.join(dong[1].split('\n'))
-                ghi_tep.write(f'{dong[0]}={vie}\n')
+                ghi_tep.write(f'{eng}={vie}\n')
         
     def Doc_Json(self, ten_tep):
         '''Đọc tệp có định dạng Json
@@ -105,8 +117,16 @@ class TepTin:
             doc_csv = csv.reader(doc_tep, delimiter = du_lieu['dau_phan_cach'])
             tieu_de = next(doc_csv) #Bỏ qua tiêu đề
             for dong in doc_csv:
+                so_cot = len(dong)
+                #Cột eng không tồn tại
+                if du_lieu['cot_eng'] >= so_cot:
+                    continue
                 if len(dong[du_lieu['cot_eng']]) != 0:
-                    ket_qua.append((dong[du_lieu['cot_eng']], dong[du_lieu['cot_vie']]))
+                    #Cột vie không tồn tại lấy cột cuối cùng
+                    if du_lieu['cot_vie'] < so_cot:
+                        ket_qua.append((dong[du_lieu['cot_eng']], dong[du_lieu['cot_vie']]))
+                    else:
+                        ket_qua.append((dong[du_lieu['cot_eng']], dong[so_cot - 1]))
         return ket_qua
         
     def Doc_Cot_2_Csv(self, du_lieu = []):
@@ -125,6 +145,10 @@ class TepTin:
             doc_csv_eng = csv.reader(doc_tep_eng, delimiter = du_lieu['dau_phan_cach'])
             tieu_de = next(doc_csv_eng) #Bỏ qua tiêu đề
             for dong in doc_csv_eng:
+                so_cot = len(dong)
+                #Cột khóa eng hoặc cột eng không tồn tại
+                if du_lieu['cot_khoa_eng']  >= so_cot or du_lieu['cot_eng'] >= so_cot:
+                    continue
                 if len(dong[du_lieu['cot_khoa_eng']]) != 0 and len(dong[du_lieu['cot_eng']]) != 0:
                     du_lieu_eng[dong[du_lieu['cot_khoa_eng']]] = dong[du_lieu['cot_eng']]
         #Đọc dữ liệu từ tệp tep_vie
@@ -132,11 +156,26 @@ class TepTin:
             doc_csv_vie = csv.reader(doc_tep_vie, delimiter = du_lieu['dau_phan_cach'])
             tieu_de = next(doc_csv_vie) #Bỏ qua tiêu đề
             for dong in doc_csv_vie:
+                so_cot = len(dong)
+                #Cột khóa vie không tồn tại
+                if du_lieu['cot_khoa_vie'] >= so_cot:
+                    continue
                 if dong[du_lieu['cot_khoa_vie']] in du_lieu_eng:
-                    ket_qua.append((du_lieu_eng[dong[du_lieu['cot_khoa_vie']]], dong[du_lieu['cot_vie']]))
+                    #Cột vie không tồn tại lấy cột cuối cùng
+                    if du_lieu['cot_vie'] < so_cot:
+                        ket_qua.append((du_lieu_eng[dong[du_lieu['cot_khoa_vie']]], dong[du_lieu['cot_vie']]))
+                    else:
+                        ket_qua.append((du_lieu_eng[dong[du_lieu['cot_khoa_vie']]], dong[so_cot - 1]))
         return ket_qua
         
     def Ghi_Csv(self, ten_tep, du_lieu = [], dau_phan_cach = ','):
+        '''Lưu dữ liệu Csv ra tệp tin
+        Đầu vào:
+            ten_tep: string #Tên tệp lưu
+            du_lieu: list['tieu_de', 'du_lieu']
+                tieu_de: list #Tiêu đề
+                du_lieu: list #Dữ liệu
+        '''
         with open(ten_tep, 'w', encoding = 'utf-8', newline = '') as ghi_tep:
             ghi_csv = csv.writer(ghi_tep, delimiter = dau_phan_cach)
             #Ghi tiêu đề
@@ -144,3 +183,12 @@ class TepTin:
             #Ghi nhiều hàng dữ liệu
             ghi_csv.writerows(du_lieu['du_lieu'])
         
+    def Nen_Tep_Gzip(self, tep_nguon, tep_dich):
+        '''Đọc tệp nguồn nén thành tệp đích
+        Đầu vào:
+            tep_nguon: string #Tên tệp cần nén
+            tep_dich: string #Tên tệp nén
+        '''
+        with open(tep_nguon, 'rb') as doc_tep:
+            with gzip.open(tep_dich, 'wb') as ghi_tep:
+                shutil.copyfileobj(doc_tep, ghi_tep)

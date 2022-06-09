@@ -45,16 +45,17 @@ class CoSoDuLieu:
         self.ket_noi_sqlite.execute(sql_create)
         print('Tạo bảng CAU_GOC thành công')
         
-    def Danh_Sach_Loc(self, bat_dau, so_dong, tu_khoa = ''):
+    def Danh_Sach_Loc(self, bat_dau, so_dong, sap_xep = 'eng', thu_tu = 'ASC', tu_khoa = ''):
         '''Hiển thị danh sách đã được lọc
         Đầu vào:
             bat_dau: int
             so_dong: int
             tu_khoa: string
+            sap_xep: id/eng/vie/ngay_tao/ngay_sua
+            thu_tu: ASC/DESC
         Trả lại:
             ket_qua: list
         '''
-        #ngay_sua DESC
         if tu_khoa == '':
             sql_select = '''SELECT id, eng, vie
                 FROM CAU_GOC
