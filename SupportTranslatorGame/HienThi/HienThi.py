@@ -45,7 +45,7 @@ class HienThi(ttk.Frame):
         #Tạo menu nhập
         menu_nhap = Menu(self.menubar, tearoff=0)
         menu_nhap.add_command(label='Csv', command=self.dieu_khien.Nhap_Tep_Csv)
-        #menu_nhap.add_command(label='Json', command=self.dieu_khien.Nhap_Tep_Json)
+        menu_nhap.add_command(label='Json', command=self.dieu_khien.Nhap_Tep_Json)
         menu_nhap.add_command(label='XUnity', command=self.dieu_khien.Nhap_Tep_XUnity)
         self.menubar.add_cascade(label='Nhập', menu=menu_nhap)
         #Tạo menu xuất
