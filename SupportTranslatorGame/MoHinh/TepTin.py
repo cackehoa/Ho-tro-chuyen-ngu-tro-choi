@@ -10,7 +10,7 @@ import gzip
 class TepTin:
     '''Quản lý vấn đề xuất nhập tệp tin'''
     def __init__(self):
-        pass
+        self.tep_khong_chuyen_ngu = os.path.join(os.getcwd(), 'khong_chuyen_ngu.txt')
         
     def Kiem_Tra_Tep_Ton_Tai(self, ten_tep):
         '''Kiểm tra tệp có tồn tại và thật sự là tệp tin chứ không phải thư mục
@@ -18,6 +18,23 @@ class TepTin:
             ket_qua: boolean
         '''
         return os.path.exists(ten_tep) and os.path.isfile(ten_tep)
+        
+    def Ghi_Khong_Chuyen_Ngu(self, du_lieu):
+        '''Ghi ra tệp tep_khong_chuyen_ngu những câu chưa chuyển ngữ
+        Đầu vào:
+            du_lieu: list (đơn)
+        Xuất ra:
+            self.tep_khong_chuyen_ngu: tệp kiểu Csv
+        '''
+        with open(self.tep_khong_chuyen_ngu, 'w', encoding = 'utf-8', newline = '') as ghi_tep:
+            ghi_csv = csv.writer(ghi_tep, delimiter = ',')
+            #Ghi tiêu đề
+            ghi_csv.writerow(['STT', 'Chưa chuyển ngữ'])
+            #Duyệt ghi dữ liệu
+            dem = 1
+            for dong in du_lieu:
+                ghi_csv.writerow([dem, dong])
+                dem +=1
         
     def Doc_XUnity(self, ten_tep):
         '''Đọc tệp kiểu txt có định dạng XUnity
@@ -30,7 +47,7 @@ class TepTin:
         ket_qua = []
         #Nếu tệp tồn tại thì đọc từng dòng
         def Chuyen_Ky_Tu(chuoi):
-            ky_tus = {'\n' : '\\n', '\t' : '\\t', '\r' : '\\r'}
+            ky_tus = {'\n' : '\\n', '\t' : '\\t', '\r' : '\\r','\\' : '\\\\'}
             ket_qua = chuoi
             for khoa in ky_tus:
                 ket_qua = khoa.join(ket_qua.split(ky_tus[khoa]))
@@ -45,11 +62,11 @@ class TepTin:
                 so_luong = len(tach)
                 if so_luong == 1:
                     eng = Chuyen_Ky_Tu(tach[0])
-                    ket_qua.append((tach[0], ''))
+                    ket_qua.append((eng, ''))
                 elif so_luong > 1:
                     eng = Chuyen_Ky_Tu(tach[0])
                     vie = Chuyen_Ky_Tu(tach[1])
-                    ket_qua.append((tach[0], tach[1]))
+                    ket_qua.append((eng, vie))
         return ket_qua
         
     def Ghi_XUnity(self, ten_tep, du_lieu):
@@ -62,8 +79,10 @@ class TepTin:
         with open(ten_tep, 'w', encoding = 'utf-8') as ghi_tep:
             for dong in du_lieu:
                 #Loại bỏ ký tự xuống dòng '\n'
-                eng = '\\n'.join(dong[0].split('\n'))
-                vie = '\\n'.join(dong[1].split('\n'))
+                eng = dong[0]
+                eng = '\\n'.join(eng.split('\n'))
+                vie = dong[1]
+                vie = '\\n'.join(vie.split('\n'))
                 ghi_tep.write(f'{eng}={vie}\n')
         
     def Doc_Json(self, ten_tep):
