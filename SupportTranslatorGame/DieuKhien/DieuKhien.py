@@ -1,11 +1,9 @@
 #DieuKhien.py
 #Controller: Điều khiển những tác của hiển thị với mô hình
-import re
 
 class DieuKhien:
     def __init__(self, mo_hinh, hien_thi):
         '''Hàm khởi tạo với đối tượng mô hình và hiển thị'''
-        #self.mo_hinh = mo_hinh
         self.mo_hinh_tep = mo_hinh.tep_tin
         self.mo_hinh_csdl = mo_hinh.csdl
         self.hien_thi = hien_thi
@@ -66,8 +64,7 @@ class DieuKhien:
         if len(txt_eng) < 2:
             self.hien_thi.text_eng.focus()
             return self.hien_thi.Nhap_Trang_Thai('Câu tiếng Anh không có nội dung')
-        Kiem_tra_eng = self.mo_hinh_csdl.Lay_Eng(txt_eng)
-        if len(Kiem_tra_eng) == 0:
+        if self.mo_hinh_csdl.Lay_Eng(txt_eng) is None:
             txt_vie = self.Loc_Khoang_Trang(self.hien_thi.Lay_Txt_Vie())
             if len(txt_vie) == 0:
                 self.hien_thi.text_vie.focus()
@@ -85,25 +82,23 @@ class DieuKhien:
         if id ==0:
             return self.hien_thi.Nhap_Trang_Thai('Chưa chọn câu nào')
         du_lieu = self.mo_hinh_csdl.Lay_Id(id)
-        if len(du_lieu) == 0:
-            return self.hien_thi.Nhap_Trang_Thai(f'Câu có id={id} không tồn tại')
-        for cau_goc in du_lieu:
+        if du_lieu is not None:
             txt_eng = self.Loc_Khoang_Trang(self.hien_thi.Lay_Txt_Eng())
-            if txt_eng == cau_goc[1]:
+            if txt_eng == du_lieu[1]:
                 txt_vie = self.Loc_Khoang_Trang(self.hien_thi.Lay_Txt_Vie())
                 self.mo_hinh_csdl.Cap_Nhat_Vie(id, txt_vie)
             else:
                 if len(txt_eng) < 2:
                     self.hien_thi.text_eng.focus()
                     return self.hien_thi.Nhap_Trang_Thai('Câu tiếng Anh không có nội dung')
-                Kiem_tra_eng = self.mo_hinh_csdl.Lay_Eng(txt_eng)
-                if len(Kiem_tra_eng) == 0:
+                if self.mo_hinh_csdl.Lay_Eng(txt_eng) is None:
                     txt_vie = self.Loc_Khoang_Trang(self.hien_thi.Lay_Txt_Vie())
                     self.mo_hinh_csdl.Cap_Nhat_Cau_Goc(id, txt_eng, txt_vie)
                 else:
                     return self.hien_thi.Nhap_Trang_Thai('Câu tiếng Anh đã tồn tại')
             self.Lay_Trang_Danh_Sach()
             return self.hien_thi.Nhap_Trang_Thai(f'Câu có id={id} được cập nhật')
+        return self.hien_thi.Nhap_Trang_Thai(f'Câu có id={id} không tồn tại')
         
     def Xoa_Cau_Goc(self):
         '''Xóa câu đang được chọn khỏi csdl'''
@@ -133,18 +128,15 @@ class DieuKhien:
                         continue #for du_lieu
                     cau_eng = self.mo_hinh_csdl.Lay_Eng(eng)
                     #Nếu câu tiếng anh KHÔNG tồn tại thì nhập câu mới
-                    if len(cau_eng) == 0:
+                    if cau_eng is None:
                         #Nhập câu mới
                         self.mo_hinh_csdl.Nhap_Cau_Goc(eng, vie)
                         nhap_moi +=1
                         continue #for du_lieu
-                    else: #Ghi đè
-                        #Câu tiếng Việt ít nhất phải có ít nhất 1 ký tự và khác câu tiếng Anh
-                        for dong in cau_eng:
-                            #Cập nhật câu tiếng Việt có id
-                            self.mo_hinh_csdl.Cap_Nhat_Vie(dong[0], vie)
-                            nhap_de +=1
-                            break
+                    else:
+                        #Cập nhật câu tiếng Việt có id
+                        self.mo_hinh_csdl.Cap_Nhat_Vie(cau_eng[0], vie)
+                        nhap_de +=1
                         continue #for du_lieu
                 bo_qua +=1
         else: # Không ghi đè
@@ -157,9 +149,8 @@ class DieuKhien:
                     if len(vie) == 0 or eng == vie:
                         bo_qua +=1
                         continue #for du_lieu
-                    cau_eng = self.mo_hinh_csdl.Lay_Eng(eng)
                     #Nếu câu tiếng anh KHÔNG tồn tại thì nhập câu mới
-                    if len(cau_eng) == 0:
+                    if self.mo_hinh_csdl.Lay_Eng(eng) is None:
                         #Nhập câu mới
                         self.mo_hinh_csdl.Nhap_Cau_Goc(eng, vie)
                         nhap_moi +=1
@@ -182,8 +173,9 @@ class DieuKhien:
         
     def Nhap_Tep_Json(self):
         '''Nhập dữ liệu từ tệp Json vào csdl'''
-        hop_thoai = self.hien_thi.Hop_Thoai_Nhap('Json')
-        print(hop_thoai)
+        #hop_thoai = self.hien_thi.Hop_Thoai_Nhap('Json')
+        du_lieu = self.mo_hinh_csdl.Lay_Id(100000)
+        print(du_lieu)
         
     def Nhap_Tep_Csv(self):
         '''Nhập dữ liệu từ tệp Csv vào csdl'''
@@ -200,84 +192,6 @@ class DieuKhien:
         else:
             self.hien_thi.Nhap_Trang_Thai('Không có tệp Csv để xử lý')
     
-    def Chuyen_Ngu(self, eng, co_dich = 0):
-        '''Cố chuyển câu tiếng Anh sang tiếng Việt nhiều nhất có thể
-        Đầu vào:
-            eng: string #Câu tiếng Anh
-            co_dich: int #Cố dịch = 1
-        Đầu ra:
-            vie: string #Câu tiếng Việt hoặc eng
-        '''
-        if len(eng) > 1:
-            cau_eng = self.mo_hinh_csdl.Lay_Eng(eng)
-            for cau in cau_eng:
-                return cau[2]
-            #Tách nhỏ câu ra để dịch
-            if co_dich == 1:
-                def Tach_Dich(eng, dau_cau):
-                    '''Tách nhỏ câu theo dấu câu dau_cau rồi dịch'''
-                    cau_dich = []
-                    tach_cau = eng.split(dau_cau)
-                    for cau in tach_cau:
-                        cau_dich.append(self.Chuyen_Ngu(cau.strip(), 1))
-                    return dau_cau.join(cau_dich)
-                #Bọc câu bằng dấu bọc dau_boc để hy vọng tìm được giá trị tương ứng trong csdl
-                dau_bocs = ['"', '\'']
-                for dau_boc in dau_bocs:
-                    eng_them_dau = dau_boc + eng + dau_boc
-                    cau_eng = self.mo_hinh_csdl.Lay_Eng(eng_them_dau)
-                    for cau in cau_eng:
-                        vie = cau[2]
-                        #Xóa dấu câu tránh gấp đôi
-                        if vie[-1:] == dau_boc: #Cuối
-                            if vie[:1] == dau_boc: #Đầu
-                                return vie[1:-1] #Trừ đầu - cuối
-                            return vie[:-1] #Trừ cuối
-                        else: 
-                            if vie[:1] == dau_boc:
-                                return vie[1:] #Trừ đầu
-                        return vie
-                #Chia nhỏ câu theo dấu câu
-                dau_caus = ['\n', '\\n', '.', '!', '?', ';', '…', ':'] #Điểm tách là dấu câu
-                for dau_cau in dau_caus:
-                    #Tách tại điểm tách và 1 ký tự rỗng theo sau
-                    dau_cau_rong = dau_cau + ' '
-                    if eng.find(dau_cau_rong) != -1:
-                        return Tach_Dich(eng, dau_cau_rong)
-                    #Tách tại điểm tách
-                    if eng.find(dau_cau) != -1:
-                        return Tach_Dich(eng, dau_cau)
-                    #Thêm dấu câu dau_cau cuối câu để hy vọng tìm giá trị tương ứng có csdl
-                    eng_them_dau = eng + dau_cau
-                    cau_eng = self.mo_hinh_csdl.Lay_Eng(eng_them_dau)
-                    for cau in cau_eng:
-                        vie = cau[2]
-                        #Xóa dấu câu tránh gấp đôi
-                        do_dai = len(dau_cau)
-                        if vie[-do_dai:] == dau_cau:
-                            return vie[:-do_dai]
-                        return vie
-                #Tách câu theo dấu câu để cố dịch thử
-                dau_bocs.append('-')
-                for dau_boc in dau_bocs:
-                    dau_cau_rong = ' ' + dau_cau + ' '
-                    if eng.find(dau_cau_rong) != -1:
-                        return Tach_Dich(eng, dau_cau_rong)
-                    dau_cau_rong = dau_cau + ' '
-                    if eng.find(dau_cau_rong) != -1:
-                        return Tach_Dich(eng, dau_cau_rong)
-                    dau_cau_rong = ' ' + dau_cau
-                    if eng.find(dau_cau_rong) != -1:
-                        return Tach_Dich(eng, dau_cau_rong)
-                    if eng.find(dau_boc) != -1:
-                        return Tach_Dich(eng, dau_boc)
-                #Chia nhỏ theo thẻ html
-                mau_html = '(<[\S\s]+>)'
-                chuoi_tach = re.findall(mau_html, eng)
-                for chuoi in chuoi_tach:
-                    return Tach_Dich(eng, chuoi)
-        return eng #Trả lại câu tiếng Anh
-        
     def Xuat_Tep_XUnity(self):
         '''Dịch những câu có trong tệp nguồn XUnity rồi xuất ra tệp đích'''
         hop_thoai = self.hien_thi.Hop_Thoai_Xuat('XUnity')
@@ -287,18 +201,28 @@ class DieuKhien:
             return self.hien_thi.Nhap_Trang_Thai('Không có tệp đích để xuất ra')
         du_lieu = self.mo_hinh_tep.Doc_XUnity(hop_thoai['tep_nguon'])
         ket_qua = []
+        khong_chuyen_ngu = []
         for dong in du_lieu:
             cau_eng = self.Loc_Khoang_Trang(dong[0])
             if len(cau_eng) == 0:
                 continue #Bỏ qua câu rỗng
             cau_vie = self.Loc_Khoang_Trang(dong[1])
-            vie = self.Chuyen_Ngu(cau_eng, hop_thoai['co_dich'])
+            vie = self.mo_hinh_csdl.Chuyen_Ngu(cau_eng, hop_thoai['co_dich'])
             #Nếu không dịch được thì trả lại kết quả cũ hoặc chính câu tiếng Anh
-            if vie == cau_eng and len(cau_vie) != 0:
-                ket_qua.append((dong[0], cau_vie))
+            if vie == cau_eng:
+                if len(cau_vie) == 0:
+                    ket_qua.append((dong[0], vie))
+                else:
+                    ket_qua.append((dong[0], cau_vie))
+                khong_chuyen_ngu.append(dong[0])
             else:
-                ket_qua.append((dong[0], vie)) #Dịch
+                if len(vie) == 0:
+                    ket_qua.append((dong[0], cau_vie))
+                    khong_chuyen_ngu.append(dong[0])
+                else:
+                    ket_qua.append((dong[0], vie))
         self.mo_hinh_tep.Ghi_XUnity(hop_thoai['tep_dich'], ket_qua)
+        self.mo_hinh_tep.Ghi_Khong_Chuyen_Ngu(khong_chuyen_ngu)
         self.hien_thi.Nhap_Trang_Thai('Xuất dữ liệu kiểu XUnity ra tệp thành công')
         
     def Xuat_Tep_Json(self):
@@ -321,21 +245,25 @@ class DieuKhien:
         if hop_thoai['cot_vie'] >= so_cot_tieu_de:
             du_lieu_csv['tieu_de'].append('vi')
         kq_du_lieu = []
+        khong_chuyen_ngu = []
         for dong in du_lieu_csv['du_lieu']:
             so_dong = len(dong)
             #Cột tiếng Anh không tồn tại
             if hop_thoai['cot_eng'] >= so_dong:
                 continue
             cau_eng = self.Loc_Khoang_Trang(dong[hop_thoai['cot_eng']])
-            vie = self.Chuyen_Ngu(cau_eng, hop_thoai['co_dich'])
+            vie = self.mo_hinh_csdl.Chuyen_Ngu(cau_eng, hop_thoai['co_dich'])
             #Nếu cột Việt không tồn tại thì thêm vào cuối
             if hop_thoai['cot_vie'] < so_dong:
                 dong[hop_thoai['cot_vie']] = vie
             else:
                 dong.append(vie)
+            if cau_eng == vie:
+                khong_chuyen_ngu.append(dong[hop_thoai['cot_eng']])
             kq_du_lieu.append(dong)
         du_lieu_csv['du_lieu'] = kq_du_lieu
         self.mo_hinh_tep.Ghi_Csv(hop_thoai['tep_dich'], du_lieu_csv, hop_thoai['dau_phan_cach'])
+        self.mo_hinh_tep.Ghi_Khong_Chuyen_Ngu(khong_chuyen_ngu)
         self.hien_thi.Nhap_Trang_Thai('Xuất dữ liệu kiểu Csv ra tệp thành công')
         
     def Nen_Tep_Tin(self):
