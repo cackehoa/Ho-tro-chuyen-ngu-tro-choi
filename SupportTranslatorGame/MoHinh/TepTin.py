@@ -33,8 +33,9 @@ class TepTin:
             #Duyệt ghi dữ liệu
             dem = 1
             for dong in du_lieu:
-                ghi_csv.writerow([dem, dong])
-                dem +=1
+                if len(dong) > 0:
+                    ghi_csv.writerow([dem, dong])
+                    dem +=1
         
     def Doc_XUnity(self, ten_tep):
         '''Đọc tệp kiểu txt có định dạng XUnity
@@ -94,7 +95,10 @@ class TepTin:
         '''
         ket_qua = []
         with open(ten_tep, "r", encoding = 'utf-8') as doc_tep:
-            ket_qua = json.loads(doc_tep.read())
+            try:
+                ket_qua = json.loads(doc_tep.read())
+            except ValueError as ex:
+                print(f'Gặp lỗi khi đọc tệp kiểu Json.\nTên tệp: {ten_tep}.\nThông điệp báo lỗi: {ex}')
         return ket_qua
         
     def Ghi_Json(self, ten_tep, du_lieu):

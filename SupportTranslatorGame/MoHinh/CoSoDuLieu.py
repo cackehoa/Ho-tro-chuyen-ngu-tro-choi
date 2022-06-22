@@ -169,129 +169,140 @@ class CoSoDuLieu:
         Đầu ra:
             vie: string #Câu tiếng Việt hoặc eng
         '''
-        if len(eng) > 1:
-            cau_eng = self.Lay_Eng(eng)
-            if cau_eng is not None:
-                return cau_eng[2]
-            #Tách nhỏ câu ra để dịch
-            if co_dich == 1:
-                def Chia_Nho_Cau(van_ban, dieu_kien_chia = '\n'):
-                    '''Chia nhỏ câu theo dieu_kien_chia rồi dịch và nối lại
-                    Đầu vào:
-                        van_ban: string
-                        dieu_kien_chia: string
-                    Đầu ra:
-                        vie: string
-                    '''
-                    cau_chuyen_ngu = []
-                    tach_van_ban = van_ban.split(dieu_kien_chia)
-                    for cau in tach_van_ban:
-                        cau_chuyen_ngu.append(self.Chuyen_Ngu(cau.strip(), 1))
-                    return dieu_kien_chia.join(cau_chuyen_ngu)
-                    
-                def Boc_Dau_Cuoi(van_ban, dau_boc_dau, dau_boc_cuoi):
-                    '''Bọc đầu - cuối để tìm kết quả tương ứng trong csdl
-                    Đầu vào:
-                        van_ban: string
-                        dau_boc_dau: char
-                        dau_boc_cuoi: char
-                    Đầu ra:
-                        vie: string #rỗng nếu không dịch được
-                    '''
-                    cau_eng = self.Lay_Eng(dau_boc_dau + van_ban + dau_boc_cuoi)
-                    if cau_eng is not None:
-                        vie = cau_eng[2]
-                        if vie[:len(dau_boc_dau)] == dau_boc_dau:
-                            if vie[-len(dau_boc_cuoi):] == dau_boc_cuoi:
-                                return vie[len(dau_boc_dau):-len(dau_boc_cuoi)]
-                            return vie[len(dau_boc_dau):]
-                        elif vie[-len(dau_boc_cuoi):] == dau_boc_cuoi:
-                            return vie[:-len(dau_boc_cuoi)]
-                        return vie
-                    return None
-                    
-                #Phân tách câu dạng: number + string
-                #VD: +1 day
-                mau_tach = '^([\-\+]{0,1}[\s]*[0-9]+[0-9\.\,]*[\s]*)([\S\s]+)$'
-                chuoi_tach = re.findall(mau_tach, eng)
-                if len(chuoi_tach) > 0:
-                    return chuoi_tach[0][0] + self.Chuyen_Ngu(chuoi_tach[0][1], 1)
-                #Bỏ rác đầu chuỗi
-                mau_rac = '^([\-\+\*\$\?\s\^\.\\\\,&#!…%@=:;_~`“”\"\'\{\}\[\]\|\(\)]+)([\S\s]+)$'
-                chuoi_tach = re.findall(mau_rac, eng)
-                if chuoi_tach:
-                    return chuoi_tach[0][0] + self.Chuyen_Ngu(chuoi_tach[0][1], 1)
-                #Bỏ rác cuối chuỗi
-                chuoi_tach = re.findall(mau_rac, eng[::-1])
-                if chuoi_tach:
-                    chuoi_nguoc = chuoi_tach[0][1]
-                    rac_nguoc = chuoi_tach[0][0]
-                    return self.Chuyen_Ngu(chuoi_nguoc[::-1], 1) + rac_nguoc[::-1]
-                #Bọc câu bằng dấu bọc dau_boc để hy vọng tìm được giá trị tương ứng trong csdl
-                #Xử lý hết các trường hợp chậm: chỉ xử lý 3 trường hợp cơ bản
-                #1/ Dấu bọc đặt biệt '“', '”'
-                vie = Boc_Dau_Cuoi(eng, '“', '”')
-                if vie is not None:
+        cau_eng = self.Lay_Eng(eng)
+        if cau_eng is not None:
+            return cau_eng[2]
+        #Tách nhỏ câu ra để dịch
+        if co_dich == 1:
+            def Chia_Nho_Cau(van_ban, dieu_kien_chia = '\n'):
+                '''Chia nhỏ câu theo dieu_kien_chia rồi dịch và nối lại
+                Đầu vào:
+                    van_ban: string
+                    dieu_kien_chia: string
+                Đầu ra:
+                    vie: string
+                '''
+                cau_chuyen_ngu = []
+                tach_van_ban = van_ban.split(dieu_kien_chia)
+                for cau in tach_van_ban:
+                    cau_chuyen_ngu.append(self.Chuyen_Ngu(cau.strip(), 1))
+                return dieu_kien_chia.join(cau_chuyen_ngu)
+                
+            def Boc_Dau_Cuoi(van_ban, dau_boc_dau, dau_boc_cuoi):
+                '''Bọc đầu - cuối để tìm kết quả tương ứng trong csdl
+                Đầu vào:
+                    van_ban: string
+                    dau_boc_dau: char
+                    dau_boc_cuoi: char
+                Đầu ra:
+                    vie: string #rỗng nếu không dịch được
+                '''
+                cau_eng = self.Lay_Eng(dau_boc_dau + van_ban + dau_boc_cuoi)
+                if cau_eng is not None:
+                    vie = cau_eng[2]
+                    if vie[:len(dau_boc_dau)] == dau_boc_dau:
+                        if vie[-len(dau_boc_cuoi):] == dau_boc_cuoi:
+                            return vie[len(dau_boc_dau):-len(dau_boc_cuoi)]
+                        return vie[len(dau_boc_dau):]
+                    elif vie[-len(dau_boc_cuoi):] == dau_boc_cuoi:
+                        return vie[:-len(dau_boc_cuoi)]
                     return vie
-                #2/ Dấu bọc thường
-                dau_bocs = ['"', '“', '”', '\'', '...']
-                for dau_boc in dau_bocs:
-                    vie = Boc_Dau_Cuoi(eng, dau_boc, dau_boc)
-                    if vie  is not None:
-                        return vie
-                    #Bọc đầu
-                    cau_eng = self.Lay_Eng(dau_boc + eng)
-                    if cau_eng is not None:
-                        vie = cau_eng[2]
-                        if vie[:len(dau_boc)] == dau_boc:
-                            return vie[len(dau_boc):]
-                        return vie
-                    #Bọc cuối
-                    cau_eng = self.Lay_Eng(eng + dau_boc)
-                    if cau_eng is not None:
-                        vie = cau_eng[2]
-                        if vie[-len(dau_boc):] == dau_boc:
-                            return vie[:-len(dau_boc)]
-                        return vie
-                #3/ Dấu bọc đặt biệt ngược '”', '“'
-                vie = Boc_Dau_Cuoi(eng, '”', '“')
+                return None
+            #Kiểm tra nếu là số thì bỏ qua    
+            mau_tach_so = '^([\-\+]{0,1}[\s%\$]*[0-9]+[0-9\.\,]*[\s%\$MKmkBb]*)$'
+            chuoi_tach = re.findall(mau_tach_so, eng)
+            if len(chuoi_tach) > 0:
+                return eng
+            #Phân tách câu dạng: number + string
+            #VD: +1 day
+            mau_tach_so_dau = '^([\-\+]{0,1}[\s%\$]*[0-9]+[0-9\.\,]*[\s%\$]*)([\S\s]+)$'
+            chuoi_tach = re.findall(mau_tach_so_dau, eng)
+            if len(chuoi_tach) > 0:
+                return chuoi_tach[0][0] + self.Chuyen_Ngu(chuoi_tach[0][1], 1)
+            #Phân tách câu dạng: string + number
+            #VD: day + 1
+            mau_tach_so_cuoi = '^([\s%\$]*[0-9\.\,]*[0-9]+[\s%\$]*[\-\+]{0,1}[\s]*)([\S\s]+)$'
+            chuoi_tach = re.findall(mau_tach_so_cuoi, eng[::-1])
+            if len(chuoi_tach) > 0:
+                vie = chuoi_tach[0][1]
+                so_cuoi = chuoi_tach[0][0]
+                return self.Chuyen_Ngu(vie[::-1], 1) + so_cuoi[::-1]
+            #Bỏ rác đầu chuỗi
+            mau_rac = '^([\-\+\*\$\?\s\^\.\\\\,&#!…%@=:;_~`“”\"\'\{\}\[\]\|\(\)]+)([\S\s]+)$'
+            chuoi_tach = re.findall(mau_rac, eng)
+            if len(chuoi_tach) > 0:
+                return chuoi_tach[0][0] + self.Chuyen_Ngu(chuoi_tach[0][1], 1)
+            #Bỏ rác cuối chuỗi
+            chuoi_tach = re.findall(mau_rac, eng[::-1])
+            if len(chuoi_tach) > 0:
+                chuoi_nguoc = chuoi_tach[0][1]
+                rac_nguoc = chuoi_tach[0][0]
+                return self.Chuyen_Ngu(chuoi_nguoc[::-1], 1) + rac_nguoc[::-1]
+            #Bọc câu bằng dấu bọc dau_boc để hy vọng tìm được giá trị tương ứng trong csdl
+            #Xử lý hết các trường hợp chậm: chỉ xử lý 3 trường hợp cơ bản
+            #1/ Dấu bọc đặt biệt '“', '”'
+            vie = Boc_Dau_Cuoi(eng, '“', '”')
+            if vie is not None:
+                return vie
+            #2/ Dấu bọc thường
+            dau_bocs = ['"', '“', '”', '\'', '…', '...']
+            for dau_boc in dau_bocs:
+                vie = Boc_Dau_Cuoi(eng, dau_boc, dau_boc)
                 if vie  is not None:
                     return vie
-                #Chia nhỏ câu theo dấu câu
-                dau_caus = ['\n', '\\n', '.', '!', '?', ';', '…', ':'] #Điểm tách là dấu câu
-                for dau_cau in dau_caus:
-                    #Thêm dấu câu dau_cau cuối câu hy vọng tìm giá trị tương ứng có csdl
-                    cau_eng = self.Lay_Eng(eng + dau_cau)
-                    if cau_eng is not None:
-                        vie = cau_eng[2]
-                        #Xóa dấu câu tránh gấp đôi
-                        if vie[-len(dau_cau):] == dau_cau:
-                            return vie[:-len(dau_cau)]
-                        return vie
-                    #Tách tại điểm tách và 1 ký tự rỗng theo sau
-                    if eng.find(dau_cau + ' ') != -1:
-                        return Chia_Nho_Cau(eng, dau_cau + ' ')
-                    #Tách tại điểm tách
-                    if eng.find(dau_cau) != -1:
-                        return Chia_Nho_Cau(eng, dau_cau)
-                #Tách nhỏ theo thẻ html
-                mau_html = '(<[\S\s]+>)'
-                chuoi_tach = re.findall(mau_html, eng)
-                for chuoi in chuoi_tach:
-                    return Chia_Nho_Cau(eng, chuoi)
-                #Tách câu theo dấu câu để cố dịch thử
-                #-- Nhiều khả năng xuất hiện kết quả đã kiểm thử ở trên
-                #-- Tìm cách giảm (nếu có thể) giúp tăng tốc
-                dau_tachs = ['"', '“', '”', '-', '*', '#', ',', '\'']
-                for dau_tach in dau_tachs:
-                    if eng.find(' ' + dau_tach + ' ') != -1:
-                        return Chia_Nho_Cau(eng, ' ' + dau_tach + ' ')
-                    if eng.find(dau_tach + ' ') != -1:
-                        return Chia_Nho_Cau(eng, dau_tach + ' ')
-                    if eng.find(' ' + dau_tach) != -1:
-                        return Chia_Nho_Cau(eng, ' ' + dau_tach)
-                    if eng.find(dau_tach) != -1:
-                        return Chia_Nho_Cau(eng, dau_tach)
+                #Bọc đầu
+                cau_eng = self.Lay_Eng(dau_boc + eng)
+                if cau_eng is not None:
+                    vie = cau_eng[2]
+                    if vie[:len(dau_boc)] == dau_boc:
+                        return vie[len(dau_boc):]
+                    return vie
+                #Bọc cuối
+                cau_eng = self.Lay_Eng(eng + dau_boc)
+                if cau_eng is not None:
+                    vie = cau_eng[2]
+                    if vie[-len(dau_boc):] == dau_boc:
+                        return vie[:-len(dau_boc)]
+                    return vie
+            #3/ Dấu bọc đặt biệt ngược '”', '“'
+            vie = Boc_Dau_Cuoi(eng, '”', '“')
+            if vie  is not None:
+                return vie
+            #Chia nhỏ câu theo dấu câu
+            dau_caus = ['\n', '\\n', '.', '!', '?', ';', '…', ':'] #Điểm tách là dấu câu
+            for dau_cau in dau_caus:
+                #Thêm dấu câu dau_cau cuối câu hy vọng tìm giá trị tương ứng có csdl
+                cau_eng = self.Lay_Eng(eng + dau_cau)
+                if cau_eng is not None:
+                    vie = cau_eng[2]
+                    #Xóa dấu câu tránh gấp đôi
+                    if vie[-len(dau_cau):] == dau_cau:
+                        return vie[:-len(dau_cau)]
+                    return vie
+                #Chia nhỏ câu tại điểm tách và 1 ký tự rỗng theo sau
+                if eng.find(dau_cau + ' ') != -1:
+                    return Chia_Nho_Cau(eng, dau_cau + ' ')
+                #Chia nhỏ câu tại điểm tách
+                if eng.find(dau_cau) != -1:
+                    return Chia_Nho_Cau(eng, dau_cau)
+            #Chia nhỏ câu theo thẻ html
+            mau_html = '(<[\S\s]+>)'
+            chuoi_tach = re.findall(mau_html, eng)
+            for chuoi in chuoi_tach:
+                return Chia_Nho_Cau(eng, chuoi)
+            #Chia nhỏ câu câu theo dấu câu để cố dịch thử
+            #-- Nhiều khả năng xuất hiện kết quả đã kiểm thử ở trên
+            #-- Tìm cách giảm (nếu có thể) giúp tăng tốc
+            dau_tachs = ['"', '“', '”', '-', '*', '#', ',', '\'', '@']
+            for dau_tach in dau_tachs:
+                if eng.find(' ' + dau_tach + ' ') != -1:
+                    return Chia_Nho_Cau(eng, ' ' + dau_tach + ' ')
+                if eng.find(dau_tach + ' ') != -1:
+                    return Chia_Nho_Cau(eng, dau_tach + ' ')
+                if eng.find(' ' + dau_tach) != -1:
+                    return Chia_Nho_Cau(eng, ' ' + dau_tach)
+                if eng.find(dau_tach) != -1:
+                    return Chia_Nho_Cau(eng, dau_tach)
         return eng #Trả lại câu tiếng Anh
     
     def __del__(self):
