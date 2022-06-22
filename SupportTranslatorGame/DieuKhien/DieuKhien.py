@@ -164,18 +164,124 @@ class DieuKhien:
         '''Nhập dữ liệu từ tệp XUnity vào csdl'''
         #Nhập dữ liệu
         ten_tep = self.hien_thi.Hop_Thoai_Mo_Tep()
-        if ten_tep !='' and self.mo_hinh_tep.Kiem_Tra_Tep_Ton_Tai(ten_tep):
+        if self.mo_hinh_tep.Kiem_Tra_Tep_Ton_Tai(ten_tep):
             #Dọc dữ liệu từ tập tin
             du_lieu = self.mo_hinh_tep.Doc_XUnity(ten_tep)
             self.Luu_Du_Lieu_Vao_Csdl(du_lieu)
         else:
             self.hien_thi.Nhap_Trang_Thai('Không có tệp XUnity để xử lý')
+    
+    def Xuat_Tep_XUnity(self):
+        '''Dịch những câu có trong tệp nguồn XUnity rồi xuất ra tệp đích'''
+        hop_thoai = self.hien_thi.Hop_Thoai_Xuat('XUnity')
+        if not self.mo_hinh_tep.Kiem_Tra_Tep_Ton_Tai(hop_thoai['tep_nguon']):
+            return self.hien_thi.Nhap_Trang_Thai('Không có tệp nguồn để xử lý')
+        if len(hop_thoai['tep_dich']) == 0:
+            return self.hien_thi.Nhap_Trang_Thai('Không có tệp đích để xuất ra')
+        du_lieu = self.mo_hinh_tep.Doc_XUnity(hop_thoai['tep_nguon'])
+        ket_qua = []
+        khong_chuyen_ngu = []
+        for dong in du_lieu:
+            cau_eng = self.Loc_Khoang_Trang(dong[0])
+            if len(cau_eng) < 2:
+                ket_qua.append((dong[0], cau_eng))
+                continue #Bỏ qua câu ngắn hơn 2
+            cau_vie = self.Loc_Khoang_Trang(dong[1])
+            vie = self.mo_hinh_csdl.Chuyen_Ngu(cau_eng, hop_thoai['co_dich'])
+            #Nếu không dịch được thì trả lại kết quả cũ hoặc chính câu tiếng Anh
+            if vie == cau_eng:
+                if len(cau_vie) == 0:
+                    ket_qua.append((dong[0], vie))
+                else:
+                    ket_qua.append((dong[0], cau_vie))
+                if dong[0] not in khong_chuyen_ngu:
+                    khong_chuyen_ngu.append(dong[0])
+            else:
+                if len(vie) == 0:
+                    ket_qua.append((dong[0], cau_vie))
+                    if dong[0] not in khong_chuyen_ngu:
+                        khong_chuyen_ngu.append(dong[0])
+                else:
+                    ket_qua.append((dong[0], vie))
+        self.mo_hinh_tep.Ghi_XUnity(hop_thoai['tep_dich'], ket_qua)
+        self.mo_hinh_tep.Ghi_Khong_Chuyen_Ngu(khong_chuyen_ngu)
+        self.hien_thi.Nhap_Trang_Thai('Xuất dữ liệu kiểu XUnity ra tệp thành công')
         
     def Nhap_Tep_Json(self):
         '''Nhập dữ liệu từ tệp Json vào csdl'''
-        #hop_thoai = self.hien_thi.Hop_Thoai_Nhap('Json')
-        du_lieu = self.mo_hinh_csdl.Lay_Id(100000)
-        print(du_lieu)
+        hop_thoai = self.hien_thi.Hop_Thoai_Nhap('Json')
+        if not self.mo_hinh_tep.Kiem_Tra_Tep_Ton_Tai(hop_thoai['tep_eng']):
+            return self.hien_thi.Nhap_Trang_Thai('Không có tệp Json tiếng Anh để xử lý')
+        if not self.mo_hinh_tep.Kiem_Tra_Tep_Ton_Tai(hop_thoai['tep_vie']):
+            return self.hien_thi.Nhap_Trang_Thai('Không có tệp Json tiếng Việt để xử lý')
+        def Duyet_Nhap_Lieu_Json(du_lieu_eng, du_lieu_vie):
+            '''Duyệt trích xuất dữ liệu tiếng Anh và tiếng Việt tương ứng
+            Đầu vào:
+                du_lieu_eng: dict #Json
+                du_lieu_vie: dict #Json
+            Đầu ra:
+                ket_qua: list[(eng, vie)]
+            '''
+            ket_qua = []
+            for khoa_chung in du_lieu_eng:
+                if khoa_chung in du_lieu_vie.keys():
+                    #Đệ quy với kiểu dữ liệu dict (Json)
+                    keu_du_lieu_eng = type(du_lieu_eng[khoa_chung])
+                    keu_du_lieu_vie = type(du_lieu_vie[khoa_chung])
+                    if keu_du_lieu_eng is dict and keu_du_lieu_vie is dict:
+                        ket_qua.extend(Duyet_Nhap_Lieu_Json(du_lieu_eng[khoa_chung], du_lieu_vie[khoa_chung]))
+                    #Xử lý kiểu dữ liệu list với tuple như nhau
+                    elif keu_du_lieu_eng is list or keu_du_lieu_eng is tuple:
+                        if keu_du_lieu_vie is list or keu_du_lieu_vie is tuple:
+                            nho_nhat = min(len(du_lieu_eng[khoa_chung]), len(du_lieu_vie[khoa_chung]))
+                            for dong in range(nho_nhat):
+                                #Nhập vào cơ sở dữ liệu
+                                ket_qua.append((du_lieu_eng[khoa_chung][dong], du_lieu_vie[khoa_chung][dong]))
+                    else:
+                        #Nhập vào cơ sở dữ liệu
+                        ket_qua.append((du_lieu_eng[khoa_chung], du_lieu_vie[khoa_chung]))
+            return ket_qua
+        du_lieu = Duyet_Nhap_Lieu_Json(self.mo_hinh_tep.Doc_Json(hop_thoai['tep_eng']), self.mo_hinh_tep.Doc_Json(hop_thoai['tep_vie']))
+        self.Luu_Du_Lieu_Vao_Csdl(du_lieu, hop_thoai['ghi_de'])
+    
+    def Xuat_Tep_Json(self):
+        '''Dịch những câu có trong tệp nguồn Json rồi xuất ra tệp đích'''
+        hop_thoai = self.hien_thi.Hop_Thoai_Xuat('Json')
+        if not self.mo_hinh_tep.Kiem_Tra_Tep_Ton_Tai(hop_thoai['tep_nguon']):
+            return self.hien_thi.Nhap_Trang_Thai('Không có tệp Json nguồn để xử lý')
+        if len(hop_thoai['tep_dich']) == 0:
+            return self.hien_thi.Nhap_Trang_Thai('Không có tệp Json đích để xuất ra')
+        du_lieu = self.mo_hinh_tep.Doc_Json(hop_thoai['tep_nguon'])
+        khong_chuyen_ngu = []
+        def Duyet_Chuyen_Ngu_Json(du_lieu, co_dich, khong_chuyen_ngu):
+            for khoa_chung in du_lieu:
+                keu_du_lieu = type(du_lieu[khoa_chung])
+                if keu_du_lieu is dict:
+                    #Đệ quy
+                    du_lieu[khoa_chung] = Duyet_Chuyen_Ngu_Json(du_lieu[khoa_chung], co_dich, khong_chuyen_ngu)
+                elif keu_du_lieu is list or keu_du_lieu is tuple:
+                    for dong  in range(du_lieu[khoa_chung]):
+                        cau_eng = self.Loc_Khoang_Trang(du_lieu[khoa_chung][dong])
+                        if len(cau_eng) > 1:
+                            vie = self.mo_hinh_csdl.Chuyen_Ngu(cau_eng, co_dich)
+                            if cau_eng == vie and du_lieu[khoa_chung][dong] not in khong_chuyen_ngu:
+                                    khong_chuyen_ngu.append(du_lieu[khoa_chung][dong])
+                            du_lieu[khoa_chung][dong] = vie
+                        else:
+                            du_lieu[khoa_chung][dong] = cau_eng
+                else:
+                    cau_eng = self.Loc_Khoang_Trang(du_lieu[khoa_chung])
+                    if len(cau_eng) > 1:
+                        vie = self.mo_hinh_csdl.Chuyen_Ngu(cau_eng, co_dich)
+                        if cau_eng == vie and du_lieu[khoa_chung] not in khong_chuyen_ngu:
+                                khong_chuyen_ngu.append(du_lieu[khoa_chung])
+                        du_lieu[khoa_chung] = vie
+                    else:
+                        du_lieu[khoa_chung] = cau_eng
+            return du_lieu
+        self.mo_hinh_tep.Ghi_Json(hop_thoai['tep_dich'], Duyet_Chuyen_Ngu_Json(du_lieu, hop_thoai['co_dich'], khong_chuyen_ngu))
+        self.mo_hinh_tep.Ghi_Khong_Chuyen_Ngu(khong_chuyen_ngu)
+        self.hien_thi.Nhap_Trang_Thai('Xuất dữ liệu kiểu Json ra tệp thành công')
         
     def Nhap_Tep_Csv(self):
         '''Nhập dữ liệu từ tệp Csv vào csdl'''
@@ -192,51 +298,13 @@ class DieuKhien:
         else:
             self.hien_thi.Nhap_Trang_Thai('Không có tệp Csv để xử lý')
     
-    def Xuat_Tep_XUnity(self):
-        '''Dịch những câu có trong tệp nguồn XUnity rồi xuất ra tệp đích'''
-        hop_thoai = self.hien_thi.Hop_Thoai_Xuat('XUnity')
-        if not self.mo_hinh_tep.Kiem_Tra_Tep_Ton_Tai(hop_thoai['tep_nguon']):
-            return self.hien_thi.Nhap_Trang_Thai('Không có tệp nguồn để xử lý')
-        if len(hop_thoai['tep_dich']) == 0:
-            return self.hien_thi.Nhap_Trang_Thai('Không có tệp đích để xuất ra')
-        du_lieu = self.mo_hinh_tep.Doc_XUnity(hop_thoai['tep_nguon'])
-        ket_qua = []
-        khong_chuyen_ngu = []
-        for dong in du_lieu:
-            cau_eng = self.Loc_Khoang_Trang(dong[0])
-            if len(cau_eng) == 0:
-                continue #Bỏ qua câu rỗng
-            cau_vie = self.Loc_Khoang_Trang(dong[1])
-            vie = self.mo_hinh_csdl.Chuyen_Ngu(cau_eng, hop_thoai['co_dich'])
-            #Nếu không dịch được thì trả lại kết quả cũ hoặc chính câu tiếng Anh
-            if vie == cau_eng:
-                if len(cau_vie) == 0:
-                    ket_qua.append((dong[0], vie))
-                else:
-                    ket_qua.append((dong[0], cau_vie))
-                khong_chuyen_ngu.append(dong[0])
-            else:
-                if len(vie) == 0:
-                    ket_qua.append((dong[0], cau_vie))
-                    khong_chuyen_ngu.append(dong[0])
-                else:
-                    ket_qua.append((dong[0], vie))
-        self.mo_hinh_tep.Ghi_XUnity(hop_thoai['tep_dich'], ket_qua)
-        self.mo_hinh_tep.Ghi_Khong_Chuyen_Ngu(khong_chuyen_ngu)
-        self.hien_thi.Nhap_Trang_Thai('Xuất dữ liệu kiểu XUnity ra tệp thành công')
-        
-    def Xuat_Tep_Json(self):
-        '''Dịch những câu có trong tệp nguồn Json rồi xuất ra tệp đích'''
-        hop_thoai = self.hien_thi.Hop_Thoai_Xuat('Json')
-        print(hop_thoai)
-        
     def Xuat_Tep_Csv(self):
         '''Dịch những câu có trong tệp nguồn Csv rồi xuất ra tệp đích'''
         hop_thoai = self.hien_thi.Hop_Thoai_Xuat('Csv')
         if not self.mo_hinh_tep.Kiem_Tra_Tep_Ton_Tai(hop_thoai['tep_nguon']):
-            return self.hien_thi.Nhap_Trang_Thai('Không có tệp nguồn để xử lý')
+            return self.hien_thi.Nhap_Trang_Thai('Không có tệp Csv nguồn để xử lý')
         if len(hop_thoai['tep_dich']) == 0:
-            return self.hien_thi.Nhap_Trang_Thai('Không có tệp đích để xuất ra')
+            return self.hien_thi.Nhap_Trang_Thai('Không có tệp Csv đích để xuất ra')
         du_lieu_csv = self.mo_hinh_tep.Doc_Csv(hop_thoai['tep_nguon'], hop_thoai['dau_phan_cach'])
         so_cot_tieu_de = len(du_lieu_csv['tieu_de'])
         if hop_thoai['cot_eng'] >= so_cot_tieu_de:
@@ -249,17 +317,30 @@ class DieuKhien:
         for dong in du_lieu_csv['du_lieu']:
             so_dong = len(dong)
             #Cột tiếng Anh không tồn tại
+            #Gặp một số tệp Csv không tiêu chuẩn
             if hop_thoai['cot_eng'] >= so_dong:
+                kq_du_lieu.append(dong)
                 continue
             cau_eng = self.Loc_Khoang_Trang(dong[hop_thoai['cot_eng']])
+            #Câu tiếng Anh quá ngắn < 2
+            if len(cau_eng) < 2:
+                if hop_thoai['cot_vie'] < so_dong:
+                    dong[hop_thoai['cot_vie']] = cau_eng
+                else:
+                    dong.append(cau_eng)
+                kq_du_lieu.append(dong)
+                continue
             vie = self.mo_hinh_csdl.Chuyen_Ngu(cau_eng, hop_thoai['co_dich'])
+            if cau_eng == vie:
+                if hop_thoai['cot_vie'] < so_dong and len(dong[hop_thoai['cot_vie']]) != 0:
+                    vie = dong[hop_thoai['cot_vie']]
+                if dong[hop_thoai['cot_eng']] not in khong_chuyen_ngu:
+                    khong_chuyen_ngu.append(dong[hop_thoai['cot_eng']])
             #Nếu cột Việt không tồn tại thì thêm vào cuối
             if hop_thoai['cot_vie'] < so_dong:
                 dong[hop_thoai['cot_vie']] = vie
             else:
                 dong.append(vie)
-            if cau_eng == vie:
-                khong_chuyen_ngu.append(dong[hop_thoai['cot_eng']])
             kq_du_lieu.append(dong)
         du_lieu_csv['du_lieu'] = kq_du_lieu
         self.mo_hinh_tep.Ghi_Csv(hop_thoai['tep_dich'], du_lieu_csv, hop_thoai['dau_phan_cach'])
