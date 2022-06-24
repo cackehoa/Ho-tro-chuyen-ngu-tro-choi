@@ -98,7 +98,7 @@ Hello=Xin chào
 ````
 
 Tôi đã gặp khi việt hóa game: DoorKickers, [Car Mechanic Simulator](https://github.com/cackehoa/Car-Mechanic-Simulator-2018-Mercedes-Benz-viet-hoa)
-#Hướng dẫn sử dụng chi tiết:
+# Hướng dẫn sử dụng chi tiết:
 Xem thêm tag Wiki nhé
 # Liên lạc và ủng hộ
 - Ủng hộ tại: [Playerduo](https://playerduo.com/cackehoa)
