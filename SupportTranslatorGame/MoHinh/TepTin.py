@@ -17,7 +17,7 @@ class TepTin:
         Trả về:
             ket_qua: boolean
         '''
-        return os.path.exists(ten_tep) and os.path.isfile(ten_tep)
+        return ten_tep != '' and os.path.exists(ten_tep) and os.path.isfile(ten_tep)
         
     def Ghi_Khong_Chuyen_Ngu(self, du_lieu):
         '''Ghi ra tệp tep_khong_chuyen_ngu những câu chưa chuyển ngữ
