@@ -29,8 +29,8 @@ class CoSoDuLieu:
         
     def Ket_Noi(self, tep_csdl):
         '''Kết nối đến tệp tep_csdl'''
-        tep_ton_tai = os.path.exists(tep_csdl) and os.path.isfile(tep_csdl)
-        self.ket_noi_sqlite = sqlite3.connect(tep_csdl)
+        tep_ton_tai = os.path.exists(self.tep_csdl) and os.path.isfile(self.tep_csdl)
+        self.ket_noi_sqlite = sqlite3.connect(self.tep_csdl, check_same_thread = False)
         self.con_tro = self.ket_noi_sqlite.cursor()
         #Nếu tep_csdl không tồn tại thì tạo bảng tương ứng
         if not tep_ton_tai:
@@ -196,7 +196,7 @@ class CoSoDuLieu:
         '''
         return self.Chuyen_Ngu_Thread(eng, co_dich, self.con_tro)
         
-    def Chuyen_Ngu_Thread(self, eng, co_dich, con_tro):
+    def Chuyen_Ngu_Thread(self, eng, co_dich, con_tro, kiem_tra = 0):
         '''Cố chuyển câu tiếng Anh sang tiếng Việt nhiều nhất có thể
         Dành cho đa luồng
         Đầu vào:
@@ -207,6 +207,7 @@ class CoSoDuLieu:
             vie: string #Câu tiếng Việt hoặc eng
         '''
         cau_eng = self.Lay_Eng_Thread(eng, con_tro)
+        #print(f'{kiem_tra}--> Bắt đầu dịch câu: {eng}')
         if cau_eng is not None:
             return cau_eng[2]
         #Tách nhỏ câu ra để dịch
@@ -219,10 +220,13 @@ class CoSoDuLieu:
                 Đầu ra:
                     vie: string
                 '''
+                if len(dieu_kien_chia) == 0:
+                    return van_ban
                 cau_chuyen_ngu = []
                 tach_van_ban = van_ban.split(dieu_kien_chia)
                 for cau in tach_van_ban:
-                    cau_chuyen_ngu.append(self.Chuyen_Ngu_Thread(cau.strip(), 1, con_tro))
+                    #print(f'{kiem_tra}-->Chia  nhỏ với \'{dieu_kien_chia}\' ra: {cau}')
+                    cau_chuyen_ngu.append(self.Chuyen_Ngu_Thread(cau, 1, con_tro, kiem_tra))
                 return dieu_kien_chia.join(cau_chuyen_ngu)
                 
             def Boc_Dau_Cuoi(van_ban, dau_boc_dau, dau_boc_cuoi, con_tro):
@@ -245,36 +249,45 @@ class CoSoDuLieu:
                         return vie[:-len(dau_boc_cuoi)]
                     return vie
                 return None
-            #Kiểm tra nếu là số thì bỏ qua    
-            mau_tach_so = '^([\-\+]{0,1}[\s%\$]*[0-9]+[0-9\.\,]*[\s%\$MKmkBb]*)$'
+            #Nếu là html thì bỏ qua
+            #print(f'{kiem_tra}--> Bỏ qua html')
+            mau_html = r'[\s]*<[^>]+>[\s]*'
+            chuoi_tach = re.findall(r'^' + mau_html + r'$', eng)
+            if len(chuoi_tach) > 0:
+                return eng
+            #Kiểm tra nếu là số thì bỏ qua
+            mau_tach_so = '^[\-\+]{0,1}[\s%\$]*[0-9]+[0-9\.\,]*[\s%\$MmKkBb]*$'
             chuoi_tach = re.findall(mau_tach_so, eng)
+            if len(chuoi_tach) > 0:
+                return eng
+            #Nếu là rác thì bỏ qua
+            chuoi_tach = re.findall('^[\-\+\*\$\?\s\^\.\\\\,&#!…%@=:;_~`“”\"\'\{\}\[\]\|\(\)<>/]+$', eng)
             if len(chuoi_tach) > 0:
                 return eng
             #Phân tách câu dạng: number + string
             #VD: +1 day
-            mau_tach_so_dau = '^([\-\+]{0,1}[\s%\$]*[0-9]+[0-9\.\,]*[\s%\$]*)([\S\s]+)$'
-            chuoi_tach = re.findall(mau_tach_so_dau, eng)
+            chuoi_tach = re.findall('^([\-\+]{0,1}[\s%\$]*[0-9]+[0-9\.\,]*[\s%\$]*)([\S\s]+)$', eng)
             if len(chuoi_tach) > 0:
-                return chuoi_tach[0][0] + self.Chuyen_Ngu_Thread(chuoi_tach[0][1], 1, con_tro)
+                return chuoi_tach[0][0] + self.Chuyen_Ngu_Thread(chuoi_tach[0][1], 1, con_tro, kiem_tra)
             #Phân tách câu dạng: string + number
             #VD: day + 1
-            mau_tach_so_cuoi = '^([\s%\$]*[0-9\.\,]*[0-9]+[\s%\$]*[\-\+]{0,1}[\s]*)([\S\s]+)$'
-            chuoi_tach = re.findall(mau_tach_so_cuoi, eng[::-1])
+            chuoi_tach = re.findall('^([\s%\$]*[0-9\.\,]*[0-9]+[\s%\$]*[\-\+]{0,1}[\s]*)([\S\s]+)$', eng[::-1])
             if len(chuoi_tach) > 0:
                 vie = chuoi_tach[0][1]
                 so_cuoi = chuoi_tach[0][0]
-                return self.Chuyen_Ngu_Thread(vie[::-1], 1, con_tro) + so_cuoi[::-1]
+                return self.Chuyen_Ngu_Thread(vie[::-1], 1, con_tro, kiem_tra) + so_cuoi[::-1]
             #Bỏ rác đầu chuỗi
-            mau_rac = '^([\-\+\*\$\?\s\^\.\\\\,&#!…%@=:;_~`“”\"\'\{\}\[\]\|\(\)]+)([\S\s]+)$'
-            chuoi_tach = re.findall(mau_rac, eng)
+            mau_rac = '[\-\+\*\$\?\s\^\.\\\\,&#!…%@=:;_~`“”\"\'\{\}\[\]\|\(\)/]+'
+            chuoi_tach = re.findall(r'^(' + mau_rac + r')([\S\s]+)$', eng)
             if len(chuoi_tach) > 0:
-                return chuoi_tach[0][0] + self.Chuyen_Ngu_Thread(chuoi_tach[0][1], 1, con_tro)
+                return chuoi_tach[0][0] + self.Chuyen_Ngu_Thread(chuoi_tach[0][1], 1, con_tro, kiem_tra)
             #Bỏ rác cuối chuỗi
-            chuoi_tach = re.findall(mau_rac, eng[::-1])
+            chuoi_tach = re.findall(r'^(' + mau_rac + r')([\S\s]+)$', eng[::-1])
             if len(chuoi_tach) > 0:
                 chuoi_nguoc = chuoi_tach[0][1]
                 rac_nguoc = chuoi_tach[0][0]
-                return self.Chuyen_Ngu_Thread(chuoi_nguoc[::-1], 1, con_tro) + rac_nguoc[::-1]
+                ket_qua1 = self.Chuyen_Ngu_Thread(chuoi_nguoc[::-1], 1, con_tro, kiem_tra)
+                return ket_qua1 + rac_nguoc[::-1]
             #Bọc câu bằng dấu bọc dau_boc để hy vọng tìm được giá trị tương ứng trong csdl
             #Xử lý hết các trường hợp chậm: chỉ xử lý 3 trường hợp cơ bản
             #1/ Dấu bọc đặt biệt '“', '”'
@@ -285,7 +298,7 @@ class CoSoDuLieu:
             dau_bocs = ['"', '“', '”', '\'', '…', '...']
             for dau_boc in dau_bocs:
                 vie = Boc_Dau_Cuoi(eng, dau_boc, dau_boc, con_tro)
-                if vie  is not None:
+                if vie is not None:
                     return vie
                 #Bọc đầu
                 cau_eng = self.Lay_Eng_Thread(dau_boc + eng, con_tro)
@@ -303,12 +316,11 @@ class CoSoDuLieu:
                     return vie
             #3/ Dấu bọc đặt biệt ngược '”', '“'
             vie = Boc_Dau_Cuoi(eng, '”', '“', con_tro)
-            if vie  is not None:
+            if vie is not None:
                 return vie
-            #Chia nhỏ câu theo dấu câu
-            dau_caus = ['\n', '\\n', '.', '!', '?', ';', '…', ':'] #Điểm tách là dấu câu
+            #Thêm dấu câu dau_cau cuối câu hy vọng tìm giá trị tương ứng có csdl
+            dau_caus = [] #['.', '?', '!', ':', ';', '…', '...']
             for dau_cau in dau_caus:
-                #Thêm dấu câu dau_cau cuối câu hy vọng tìm giá trị tương ứng có csdl
                 cau_eng = self.Lay_Eng_Thread(eng + dau_cau, con_tro)
                 if cau_eng is not None:
                     vie = cau_eng[2]
@@ -316,30 +328,30 @@ class CoSoDuLieu:
                     if vie[-len(dau_cau):] == dau_cau:
                         return vie[:-len(dau_cau)]
                     return vie
-                #Chia nhỏ câu tại điểm tách và 1 ký tự rỗng theo sau
-                if eng.find(dau_cau + ' ') != -1:
-                    return Chia_Nho_Cau(eng, dau_cau + ' ', con_tro)
-                #Chia nhỏ câu tại điểm tách
-                if eng.find(dau_cau) != -1:
-                    return Chia_Nho_Cau(eng, dau_cau, con_tro)
-            #Chia nhỏ câu theo thẻ html
-            mau_html = '(<[\S\s]+>)'
-            chuoi_tach = re.findall(mau_html, eng)
+            #Chia nhỏ câu theo ký tự xuống dòng
+            chuoi_tach = re.findall(r'[\s]*[\n]+[\s]*', eng)
+            #print(f'{kiem_tra}--> Xuống dòng 1')
             for chuoi in chuoi_tach:
                 return Chia_Nho_Cau(eng, chuoi, con_tro)
-            #Chia nhỏ câu câu theo dấu câu để cố dịch thử
-            #-- Nhiều khả năng xuất hiện kết quả đã kiểm thử ở trên
-            #-- Tìm cách giảm (nếu có thể) giúp tăng tốc
-            dau_tachs = ['"', '“', '”', '-', '*', '#', ',', '\'', '@']
-            for dau_tach in dau_tachs:
-                if eng.find(' ' + dau_tach + ' ') != -1:
-                    return Chia_Nho_Cau(eng, ' ' + dau_tach + ' ', con_tro)
-                if eng.find(dau_tach + ' ') != -1:
-                    return Chia_Nho_Cau(eng, dau_tach + ' ', con_tro)
-                if eng.find(' ' + dau_tach) != -1:
-                    return Chia_Nho_Cau(eng, ' ' + dau_tach, con_tro)
-                if eng.find(dau_tach) != -1:
-                    return Chia_Nho_Cau(eng, dau_tach, con_tro)
+            chuoi_tach = re.findall(r'[\s]*\\n[\s]*', eng) #Xuống dòng đặt biệt văn bản mã hóa (\\n)
+            #print(f'{kiem_tra}--> Xuống dòng 2')
+            for chuoi in chuoi_tach:
+                return Chia_Nho_Cau(eng, chuoi, con_tro)
+            #Chia nhỏ câu theo thẻ html
+            chuoi_tach = re.findall(mau_html, eng)
+            #print(f'{kiem_tra}--> Chia nhỏ html')
+            for chuoi in chuoi_tach:
+                return Chia_Nho_Cau(eng, chuoi, con_tro)
+            #Chia nhỏ theo dấu câu để cố dịch thử (nguyên câu không bị lẻ)
+            chuoi_tach = re.findall(r'[\s]*[\.\?!:;…]+[\s]*', eng)
+            #print(f'{kiem_tra}--> Chia nhỏ dấu câu')
+            for chuoi in chuoi_tach:
+                return Chia_Nho_Cau(eng, chuoi, con_tro)
+            #Chia nhỏ câu theo ký tự đặt biệt để cố dịch thử
+            chuoi_tach = re.findall(r'[\s]*[\,\(\)\"\'“”\*\-\+@<>\$\&/]+[\s]*', eng)
+            #print(f'{kiem_tra}--> Chia nhỏ ký tự')
+            for chuoi in chuoi_tach:
+                return Chia_Nho_Cau(eng, chuoi, con_tro)
         return eng #Trả lại câu tiếng Anh
     
     def Chuyen_Ngu_XUnity(self, du_lieu, co_dich, kq_du_lieu, khong_chuyen_ngu):
@@ -352,10 +364,9 @@ class CoSoDuLieu:
             kq_du_lieu: list #Dữ liệu sau khi chuyển  ngữ
             khong_chuyen_ngu: list #Dữ liệu không chuyển ngữ dạng (STT,Chưa chuyển ngữ)
         '''
-        def Duyet_Du_Lieu_XUnity(du_lieu, co_dich, kq_du_lieu, khong_chuyen_ngu):
-            #Tạo con trỏ mới đến csdl
-            ket_noi_sqlite = sqlite3.connect(self.tep_csdl)
-            con_tro = ket_noi_sqlite.cursor()
+        def Thread_XUnity(du_lieu, co_dich, kq_du_lieu, khong_chuyen_ngu):
+            #Tạo con trỏ mới cho luồng
+            con_tro = self.ket_noi_sqlite.cursor()
             for dong in du_lieu:
                 cau_eng = Loc_Khoang_Trang(dong[0])
                 if len(cau_eng) < 2:
@@ -378,8 +389,7 @@ class CoSoDuLieu:
                             khong_chuyen_ngu.append(dong[0])
                     else:
                         kq_du_lieu.append((dong[0], vie))
-            #Đóng csdl
-            ket_noi_sqlite.close()
+            
         #Tạo số luồng bằng số CPU đang có
         so_thread = os.cpu_count()
         danh_sach_thread = []
@@ -387,13 +397,13 @@ class CoSoDuLieu:
         ket_qua_kocn = []
         so_dong = len(du_lieu)
         #Hạn chế tạo nhiều luồng khi số lượng dữ liệu nhỏ
-        if so_dong <= so_thread:
-            so_thread = 1
+        if so_dong < so_thread:
+            so_thread = so_dong
         #Khởi chạy so_thread luồng
         for cpu in range(so_thread):
             ket_qua_luong.append([])
             ket_qua_kocn.append([])
-            luong = threading.Thread(target=Duyet_Du_Lieu_XUnity, args=(du_lieu[(so_dong*cpu)//so_thread:(so_dong*(cpu+1))//so_thread], co_dich, ket_qua_luong[cpu], ket_qua_kocn[cpu]))
+            luong = threading.Thread(target=Thread_XUnity, args=(du_lieu[(so_dong*cpu)//so_thread:(so_dong*(cpu+1))//so_thread], co_dich, ket_qua_luong[cpu], ket_qua_kocn[cpu]))
             luong.start()
             danh_sach_thread.append(luong)
         #Đợi các luồng kết thúc
@@ -417,11 +427,10 @@ class CoSoDuLieu:
             kq_du_lieu: list #Dữ liệu sau khi chuyển  ngữ
             khong_chuyen_ngu: list #Dữ liệu không chuyển ngữ dạng (STT,Chưa chuyển ngữ)
         '''
-        def Duyet_Du_Lieu_Csv(du_lieu_csv, cot_eng, cot_vie, co_dich, kq_du_lieu, khong_chuyen_ngu):
+        def Thread_Csv(du_lieu_csv, cot_eng, cot_vie, co_dich, kq_du_lieu, khong_chuyen_ngu):
             '''Duyệt dữ liệu Csv và chuyển ngữ'''
-            #Tạo con trỏ mới đến csdl
-            ket_noi_sqlite = sqlite3.connect(self.tep_csdl)
-            con_tro = ket_noi_sqlite.cursor()
+            #Tạo con trỏ mới cho luồng
+            con_tro = self.ket_noi_sqlite.cursor()
             for dong in du_lieu_csv:
                 so_dong = len(dong)
                 #Cột tiếng Anh không tồn tại
@@ -450,8 +459,7 @@ class CoSoDuLieu:
                 else:
                     dong.append(vie)
                 kq_du_lieu.append(dong)
-            #Đóng csdl
-            ket_noi_sqlite.close()
+            
         #Tạo số luồng bằng số CPU đang có
         so_thread = os.cpu_count()
         danh_sach_thread = []
@@ -459,13 +467,13 @@ class CoSoDuLieu:
         ket_qua_kocn = []
         so_dong = len(du_lieu_csv)
         #Hạn chế tạo nhiều luồng khi số lượng dữ liệu nhỏ
-        if so_dong <= so_thread:
-            so_thread = 1
+        if so_dong < so_thread:
+            so_thread = so_dong
         #Khởi chạy so_thread luồng
         for cpu in range(so_thread):
             ket_qua_luong.append([])
             ket_qua_kocn.append([])
-            luong = threading.Thread(target=Duyet_Du_Lieu_Csv, args=(du_lieu_csv[(so_dong*cpu)//so_thread:(so_dong*(cpu+1))//so_thread], cot_eng, cot_vie, co_dich, ket_qua_luong[cpu], ket_qua_kocn[cpu]))
+            luong = threading.Thread(target=Thread_Csv, args=(du_lieu_csv[(so_dong*cpu)//so_thread:(so_dong*(cpu+1))//so_thread], cot_eng, cot_vie, co_dich, ket_qua_luong[cpu], ket_qua_kocn[cpu]))
             luong.start()
             danh_sach_thread.append(luong)
         #Đợi các luồng kết thúc
@@ -514,14 +522,13 @@ class CoSoDuLieu:
                     else:
                         du_lieu[khoa_chung] = cau_eng
             return du_lieu
+            
         def Thread_Json(du_lieu, co_dich, ket_qua, khong_chuyen_ngu):
             '''Hàm khởi tạo kết nối sqlite3 trước khi duyệt'''
-            #Tạo con trỏ mới đến csdl
-            ket_noi_sqlite = sqlite3.connect(self.tep_csdl)
-            con_tro = ket_noi_sqlite.cursor()
+            #Tạo con trỏ mới cho luồng
+            con_tro = self.ket_noi_sqlite.cursor()
             ket_qua.update(Duyet_Du_Lieu_Json(du_lieu, co_dich, khong_chuyen_ngu, con_tro))
-            #Đóng csdl
-            ket_noi_sqlite.close()
+        
         #Tạo số luồng bằng số CPU đang có
         so_thread = os.cpu_count()
         danh_sach_thread = []
@@ -529,13 +536,64 @@ class CoSoDuLieu:
         ket_qua_kocn = []
         so_dong = len(du_lieu)
         #Hạn chế tạo nhiều luồng khi số lượng dữ liệu nhỏ
-        if so_dong <= so_thread:
-            so_thread = 1
+        if so_dong < so_thread:
+            so_thread = so_dong
         #Khởi chạy so_thread luồng
         for cpu in range(so_thread):
             ket_qua_luong.append({})
             ket_qua_kocn.append([])
             luong = threading.Thread(target=Thread_Json, args=(dict(list(du_lieu.items())[(so_dong*cpu)//so_thread:(so_dong*(cpu+1))//so_thread]), co_dich, ket_qua_luong[cpu], ket_qua_kocn[cpu]))
+            luong.start()
+            danh_sach_thread.append(luong)
+        #Đợi các luồng kết thúc
+        for luong in danh_sach_thread:
+            luong.join()
+        #Nối các kết quả lại với nhau
+        for ket_qua in ket_qua_luong:
+            kq_du_lieu.update(ket_qua)
+        for ket_qua in ket_qua_kocn:
+            khong_chuyen_ngu.extend(ket_qua)
+    
+    def Chuyen_Ngu_Ini(self, du_lieu, co_dich, kq_du_lieu, khong_chuyen_ngu):
+        '''Hàm giúp chuyển ngữ loại ini
+        Áp dụng phươn đa luồng nhằm tăng tốc
+        Đầu vào:
+            du_lieu: dict #Dữ liệu cần chuyển ngữ
+            co_dich: int(0,1) #Cố dịch
+        Đầu ra:
+            kq_du_lieu: dict{khoa_id : [(khoa,gia_tri)])} #Dữ liệu sau khi chuyển  ngữ
+            khong_chuyen_ngu: list #Dữ liệu không chuyển ngữ dạng (STT,Chưa chuyển ngữ)
+        '''
+        def Thread_Ini(du_lieu, co_dich, kq_du_lieu, khong_chuyen_ngu, cpu):
+            #Tạo con trỏ mới cho luồng
+            con_tro = self.ket_noi_sqlite.cursor()
+            for khoa_id in du_lieu:
+                kq_du_lieu[khoa_id] = []
+                for dong  in du_lieu[khoa_id]:
+                    cau_eng = Loc_Khoang_Trang(dong[1])
+                    if len(cau_eng) > 1:
+                        vie = self.Chuyen_Ngu_Thread(cau_eng, co_dich, con_tro, cpu)
+                        #print(f'No: {vie}')
+                        if cau_eng == vie and dong[1] not in khong_chuyen_ngu:
+                            khong_chuyen_ngu.append(dong[1])
+                        kq_du_lieu[khoa_id].append((dong[0], vie))
+                        continue
+                    kq_du_lieu[khoa_id].append((dong[0], cau_eng))
+                    
+        #Tạo số luồng bằng số CPU đang có
+        so_thread = os.cpu_count()
+        danh_sach_thread = []
+        ket_qua_luong = []
+        ket_qua_kocn = []
+        so_dong = len(du_lieu)
+        #Hạn chế tạo nhiều luồng khi số lượng dữ liệu nhỏ
+        if so_dong < so_thread:
+            so_thread = so_dong
+        #Khởi chạy so_thread luồng
+        for cpu in range(so_thread):
+            ket_qua_luong.append({})
+            ket_qua_kocn.append([])
+            luong = threading.Thread(target=Thread_Ini, args=(dict(list(du_lieu.items())[(so_dong*cpu)//so_thread:(so_dong*(cpu+1))//so_thread]), co_dich, ket_qua_luong[len(ket_qua_luong) - 1], ket_qua_kocn[len(ket_qua_kocn) - 1], cpu))
             luong.start()
             danh_sach_thread.append(luong)
         #Đợi các luồng kết thúc

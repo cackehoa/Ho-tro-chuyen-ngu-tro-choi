@@ -2,10 +2,12 @@
 #Quản lý xuất nhập tệp tin
 
 import os
-import json
+import re
 import csv
+import json
 import shutil
 import gzip
+from ..HamChung import Chuyen_Doi_Ky_Tu_Dat_Biet
 
 class TepTin:
     '''Quản lý vấn đề xuất nhập tệp tin'''
@@ -80,10 +82,8 @@ class TepTin:
         with open(ten_tep, 'w', encoding = 'utf-8') as ghi_tep:
             for dong in du_lieu:
                 #Loại bỏ ký tự xuống dòng '\n'
-                eng = dong[0]
-                eng = '\\n'.join(eng.split('\n'))
-                vie = dong[1]
-                vie = '\\n'.join(vie.split('\n'))
+                eng = Chuyen_Doi_Ky_Tu_Dat_Biet(dong[0])
+                vie = Chuyen_Doi_Ky_Tu_Dat_Biet(dong[1])
                 ghi_tep.write(f'{eng}={vie}\n')
         
     def Doc_Json(self, ten_tep):
@@ -205,6 +205,54 @@ class TepTin:
             ghi_csv.writerow(du_lieu['tieu_de'])
             #Ghi nhiều hàng dữ liệu
             ghi_csv.writerows(du_lieu['du_lieu'])
+        
+    def Doc_Ini(self, ten_tep):
+        '''Đọc đọc dữ liệu kiệu Ini từ tệp tin
+        Đầu vào:
+            ten_tep: string #Tên tệp
+        Đầu ra:
+            ket_qua: dict{khoa_id : [(khoa,gia_tri)])}
+        '''
+        danh_sach_dong = []
+        with open(ten_tep, "r", encoding = 'utf-8') as doc_tep:
+            danh_sach_dong = doc_tep.readlines()
+        khoa_id = 'default'
+        ket_qua = {}
+        for dong_l in danh_sach_dong:
+            dong = dong_l.strip()
+            #Bỏ qua dòng rỗng
+            if len(dong) == 0:
+                continue
+            #Bỏ qua chú thích
+            if dong[:1] == ';':
+                continue
+            #Kiểm tra có phải id không
+            loc = re.findall(r'^\[([^\[]+)\]$', dong)
+            if len(loc) == 1:
+                khoa_id = loc[0]
+                ket_qua[khoa_id] = []
+                continue
+            tach_chuoi = dong.split('=')
+            if len(tach_chuoi) == 2: #Bình thường
+                ket_qua[khoa_id].append((tach_chuoi[0], tach_chuoi[1]))
+            elif len(tach_chuoi) == 1: #Lỗi mới xảy ra
+                ket_qua[khoa_id].append((tach_chuoi[0], ''))
+            else: #Có vấn đề gì đó với dấu bằng (=)
+                ket_qua[khoa_id].append((tach_chuoi[0], '='.join(tach_chuoi[1:])))
+        return ket_qua
+        
+    def Ghi_Ini(self, ten_tep, du_lieu):
+        '''Ghi dữ liệu kiểu Ini ra tệp tin
+        Đầu vào:
+            ten_tep: string #Tên tệp
+            du_lieu: dict{khoa_id : [(khoa,gia_tri)])} #Dữ liệu cần ghi
+        '''
+        with open(ten_tep, 'w', encoding = 'utf-8') as ghi_tep:
+            for khoa_id in du_lieu:
+                ghi_tep.write(f'[{khoa_id}]\n')
+                for gia_tri in du_lieu[khoa_id]:
+                    ghi_tep.write(f'{gia_tri[0]}={Chuyen_Doi_Ky_Tu_Dat_Biet(gia_tri[1])}\n')
+                ghi_tep.write('\n')
         
     def Nen_Tep_Gzip(self, tep_nguon, tep_dich):
         '''Đọc tệp nguồn nén thành tệp đích
