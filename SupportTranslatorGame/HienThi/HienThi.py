@@ -45,12 +45,14 @@ class HienThi(ttk.Frame):
         #Tạo menu nhập
         menu_nhap = Menu(self.menubar, tearoff=0)
         menu_nhap.add_command(label='Csv', command=self.dieu_khien.Nhap_Tep_Csv)
+        menu_nhap.add_command(label='Ini', command=self.dieu_khien.Nhap_Tep_Ini)
         menu_nhap.add_command(label='Json', command=self.dieu_khien.Nhap_Tep_Json)
         menu_nhap.add_command(label='XUnity', command=self.dieu_khien.Nhap_Tep_XUnity)
         self.menubar.add_cascade(label='Nhập', menu=menu_nhap)
         #Tạo menu xuất
         menu_xuat = Menu(self.menubar, tearoff=0)
         menu_xuat.add_command(label='Csv', command=self.dieu_khien.Xuat_Tep_Csv)
+        menu_xuat.add_command(label='Ini', command=self.dieu_khien.Xuat_Tep_Ini)
         menu_xuat.add_command(label='Json', command=self.dieu_khien.Xuat_Tep_Json)
         menu_xuat.add_command(label='XUnity', command=self.dieu_khien.Xuat_Tep_XUnity)
         self.menubar.add_cascade(label='Xuất', menu=menu_xuat)
@@ -194,42 +196,42 @@ class HienThi(ttk.Frame):
         '''Cho phép hiển thị trạng thái hiện tại'''
         self.label_trang_thai.config(text = trang_thai)
         
-    def Hop_Thoai_Mo_Tep(self, loai_tep = 'XUnity'):
-        '''Mở ra hộp thoại cho phép nhập vào vị trí chính xác của tệp tin'''
+    def Kieu_Tep(self, loai_tep = 'XUnity'):
         kieu_tep = (('XUnity', '*.txt'),
             ('Csv', '*.csv'),
+            ('Ini', '*.ini'),
             ('Json', '*.json'),
             ('Tất cả tệp', '*.*'))
         if loai_tep == 'Json':
-                kieu_tep = (('Json', '*.json'),
-                    ('Csv', '*.csv'),
-                    ('XUnity', '*.txt'),
-                    ('Tất cả tệp', '*.*'))
+            kieu_tep = (('Json', '*.json'),
+                ('Csv', '*.csv'),
+                ('Ini', '*.ini'),
+                ('XUnity', '*.txt'),
+                ('Tất cả tệp', '*.*'))
+            return kieu_tep
         if loai_tep == 'Csv':
-                kieu_tep = (('Csv', '*.csv'),
-                    ('Json', '*.json'),
-                    ('XUnity', '*.txt'),
-                    ('Tất cả tệp', '*.*'))
-        ten_tep = Hop_Thoai_Tep.askopenfilename(title='Mở tệp', filetypes=kieu_tep) # initialdir='/' thư mục mặc định
+            kieu_tep = (('Csv', '*.csv'),
+                ('Json', '*.json'),
+                ('Ini', '*.ini'),
+                ('XUnity', '*.txt'),
+                ('Tất cả tệp', '*.*'))
+            return kieu_tep
+        if loai_tep == 'Ini':
+            kieu_tep = (('Ini', '*.*'),
+                ('Csv', '*.csv'),
+                ('Json', '*.json'),
+                ('XUnity', '*.txt'),
+                ('Tất cả tệp', '*.*'))
+            return kieu_tep
+        return kieu_tep
+    def Hop_Thoai_Mo_Tep(self, loai_tep = 'XUnity'):
+        '''Mở ra hộp thoại cho phép nhập vào vị trí chính xác của tệp tin'''
+        ten_tep = Hop_Thoai_Tep.askopenfilename(title='Mở tệp', filetypes=self.Kieu_Tep(loai_tep)) # initialdir='/' thư mục mặc định
         return ten_tep
         
     def Hop_Thoai_Luu_Tep(self, loai_tep = 'XUnity'):
         '''Hộp thoại lưu tệp'''
-        kieu_tep = (('XUnity', '*.txt'),
-            ('Csv', '*.csv'),
-            ('Json', '*.json'),
-            ('Tất cả tệp', '*.*'))
-        if loai_tep == 'Json':
-                kieu_tep = (('Json', '*.json'),
-                    ('Csv', '*.csv'),
-                    ('XUnity', '*.txt'),
-                    ('Tất cả tệp', '*.*'))
-        if loai_tep == 'Csv':
-                kieu_tep = (('Csv', '*.csv'),
-                    ('Json', '*.json'),
-                    ('XUnity', '*.txt'),
-                    ('Tất cả tệp', '*.*'))
-        ten_tep = Hop_Thoai_Tep.asksaveasfilename(title='Lưu tệp', filetypes=kieu_tep)
+        ten_tep = Hop_Thoai_Tep.asksaveasfilename(title='Lưu tệp', filetypes=self.Kieu_Tep(loai_tep))
         return ten_tep
         
     def Hop_Thoai_Xuat(self, loai_tep = 'XUnity'):
