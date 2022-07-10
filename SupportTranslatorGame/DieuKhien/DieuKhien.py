@@ -172,6 +172,7 @@ class DieuKhien:
         self.mo_hinh_tep.Ghi_XUnity(hop_thoai['tep_dich'], ket_qua)
         self.mo_hinh_tep.Ghi_Khong_Chuyen_Ngu(khong_chuyen_ngu)
         self.hien_thi.Nhap_Trang_Thai('Xuất dữ liệu kiểu XUnity ra tệp thành công')
+        self.hien_thi.Hop_Thoai_Thong_Bao('Xuất dữ liệu kiểu XUnity ra tệp thành công')
         
     def Nhap_Tep_Json(self):
         '''Nhập dữ liệu từ tệp Json vào csdl'''
@@ -208,8 +209,8 @@ class DieuKhien:
                         #Nhập vào cơ sở dữ liệu
                         ket_qua.append((du_lieu_eng[khoa_chung], du_lieu_vie[khoa_chung]))
             return ket_qua
-        du_lieu = Duyet_Nhap_Lieu_Json(self.mo_hinh_tep.Doc_Json(hop_thoai['tep_eng']), self.mo_hinh_tep.Doc_Json(hop_thoai['tep_vie']))
-        self.Luu_Du_Lieu_Vao_Csdl(du_lieu, hop_thoai['ghi_de'])
+        du_lieu_json = Duyet_Nhap_Lieu_Json(self.mo_hinh_tep.Doc_Json(hop_thoai['tep_eng']), self.mo_hinh_tep.Doc_Json(hop_thoai['tep_vie']))
+        self.Luu_Du_Lieu_Vao_Csdl(du_lieu_json, hop_thoai['ghi_de'])
         
     def Xuat_Tep_Json(self):
         '''Dịch những câu có trong tệp nguồn Json rồi xuất ra tệp đích'''
@@ -218,13 +219,14 @@ class DieuKhien:
             return self.hien_thi.Nhap_Trang_Thai('Không có tệp Json nguồn để xử lý')
         if len(hop_thoai['tep_dich']) == 0:
             return self.hien_thi.Nhap_Trang_Thai('Không có tệp Json đích để xuất ra')
-        du_lieu = self.mo_hinh_tep.Doc_Json(hop_thoai['tep_nguon'])
+        du_lieu_json = self.mo_hinh_tep.Doc_Json(hop_thoai['tep_nguon'])
         khong_chuyen_ngu = []
-        ket_qua = {}
-        self.mo_hinh_csdl.Chuyen_Ngu_Json(du_lieu, hop_thoai['co_dich'], ket_qua, khong_chuyen_ngu)
-        self.mo_hinh_tep.Ghi_Json(hop_thoai['tep_dich'], ket_qua)
+        ket_qua_json = {}
+        self.mo_hinh_csdl.Chuyen_Ngu_Json(du_lieu_json, hop_thoai['co_dich'], ket_qua_json, khong_chuyen_ngu)
+        self.mo_hinh_tep.Ghi_Json(hop_thoai['tep_dich'], ket_qua_json)
         self.mo_hinh_tep.Ghi_Khong_Chuyen_Ngu(khong_chuyen_ngu)
         self.hien_thi.Nhap_Trang_Thai('Xuất dữ liệu kiểu Json ra tệp thành công')
+        self.hien_thi.Hop_Thoai_Thong_Bao('Xuất dữ liệu kiểu Json ra tệp thành công')
         
     def Nhap_Tep_Csv(self):
         '''Nhập dữ liệu từ tệp Csv vào csdl'''
@@ -262,6 +264,41 @@ class DieuKhien:
         self.mo_hinh_tep.Ghi_Csv(hop_thoai['tep_dich'], du_lieu_csv, hop_thoai['dau_phan_cach'])
         self.mo_hinh_tep.Ghi_Khong_Chuyen_Ngu(khong_chuyen_ngu)
         self.hien_thi.Nhap_Trang_Thai('Xuất dữ liệu kiểu Csv ra tệp thành công')
+        self.hien_thi.Hop_Thoai_Thong_Bao('Xuất dữ liệu kiểu Csv ra tệp thành công')
+        
+    def Nhap_Tep_Ini(self):
+        '''Hàm nhập dữ liệu kiểu Ini vào csdl'''
+        hop_thoai = self.hien_thi.Hop_Thoai_Nhap('Ini')
+        if not self.mo_hinh_tep.Kiem_Tra_Tep_Ton_Tai(hop_thoai['tep_eng']):
+            return self.hien_thi.Nhap_Trang_Thai('Không có tệp Ini tiếng Anh để xử lý')
+        if not self.mo_hinh_tep.Kiem_Tra_Tep_Ton_Tai(hop_thoai['tep_vie']):
+            return self.hien_thi.Nhap_Trang_Thai('Không có tệp Ini tiếng Việt để xử lý')
+        du_lieu_eng = self.mo_hinh_tep.Doc_Ini(hop_thoai['tep_eng'])
+        du_lieu_vie = self.mo_hinh_tep.Doc_Ini(hop_thoai['tep_vie'])
+        du_lieu_ini = []
+        for khoa_id in du_lieu_eng:
+            if khoa_id in du_lieu_vie.keys():
+                for khoa_eng in du_lieu_eng[khoa_id]:
+                    for khoa_vie in du_lieu_vie[khoa_id]:
+                        if khoa_eng[0] ==  khoa_vie[0]:
+                            du_lieu_ini.append((khoa_eng[1], khoa_vie[1]))
+        self.Luu_Du_Lieu_Vao_Csdl(du_lieu_ini, hop_thoai['ghi_de'])
+        
+    def Xuat_Tep_Ini(self):
+        '''Hàm dịch những câu tiếng Anh trong tệp nguồn ra câu tiếng Việt trong tệp đích'''
+        hop_thoai = self.hien_thi.Hop_Thoai_Xuat('Ini')
+        if not self.mo_hinh_tep.Kiem_Tra_Tep_Ton_Tai(hop_thoai['tep_nguon']):
+            return self.hien_thi.Nhap_Trang_Thai('Không có tệp Ini nguồn để xử lý')
+        if len(hop_thoai['tep_dich']) == 0:
+            return self.hien_thi.Nhap_Trang_Thai('Không có tệp Ini đích để xuất ra')
+        du_lieu_ini = self.mo_hinh_tep.Doc_Ini(hop_thoai['tep_nguon'])
+        khong_chuyen_ngu = []
+        ket_qua = {}
+        self.mo_hinh_csdl.Chuyen_Ngu_Ini(du_lieu_ini, hop_thoai['co_dich'], ket_qua, khong_chuyen_ngu)
+        self.mo_hinh_tep.Ghi_Ini(hop_thoai['tep_dich'], ket_qua)
+        self.mo_hinh_tep.Ghi_Khong_Chuyen_Ngu(khong_chuyen_ngu)
+        self.hien_thi.Nhap_Trang_Thai('Xuất dữ liệu kiểu Ini ra tệp thành công')
+        self.hien_thi.Hop_Thoai_Thong_Bao('Xuất dữ liệu kiểu Ini ra tệp thành công')
         
     def Nen_Tep_Tin(self):
         '''Hàm chuyên nén tệp thành gzip'''
