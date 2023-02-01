@@ -40,6 +40,8 @@ class HienThi(ttk.Frame):
         menu_hanh_dong.add_command(label='Cập nhật', command=self.dieu_khien.Cap_Nhat_Cau_Goc)
         menu_hanh_dong.add_command(label='Xóa', command=self.dieu_khien.Xoa_Cau_Goc)
         menu_hanh_dong.add_separator()
+        menu_hanh_dong.add_command(label='Cập nhật sql', command=self.dieu_khien.Luu_Du_Lieu_Sql)
+        menu_hanh_dong.add_separator()
         menu_hanh_dong.add_command(label='Thoát', command=self.tk_goc.quit)
         self.menubar.add_cascade(label='Hành động', menu=menu_hanh_dong)
         #Tạo menu nhập
@@ -175,22 +177,30 @@ class HienThi(ttk.Frame):
         return self.text_vie.get('1.0', 'end')
         
     def Lay_Txt_Eng(self):
-        '''Trả lại chuỗi tiếng Anh từ textbox'''
+        '''Trả lại chuỗi tiếng Anh từ textbox
+        Đầu ra: string
+        '''
         return self.text_eng.get('1.0', 'end')
+        
+    def CapNhat_TxtAll(self, du_lieu):
+        '''Cập nhật tất cả text area
+        Đầu vào: du_lieu: array
+        '''
+        #Xóa hết dữ liệu trong Text area
+        self.Cap_Nhat_Txt_ID(du_lieu[0])
+        self.text_eng.delete('1.0', 'end')
+        self.text_eng.insert('end' ,du_lieu[1])
+        self.text_vie.delete('1.0', 'end')
+        self.text_vie.insert('end' ,du_lieu[2])
         
     def Double_Click_Danh_Sach(self, event=None):
         '''Xử lý sự kiện nhấp đúp vào danh sách'''
         #item = self.treeview_danh_sach.selection()
         item = self.treeview_danh_sach.focus()
-        gia_tri = self.treeview_danh_sach.item(item, 'values')
-        if gia_tri:
-            #Xóa hết dữ liệu trong Text area
-            self.Cap_Nhat_Txt_ID(gia_tri[0])
-            self.text_eng.delete('1.0', 'end')
-            self.text_eng.insert('end' ,gia_tri[1])
-            self.text_vie.delete('1.0', 'end')
-            self.text_vie.insert('end' ,gia_tri[2])
-            self.Nhap_Trang_Thai(f'Chọn câu có id={gia_tri[0]}')
+        du_lieu = self.treeview_danh_sach.item(item, 'values')
+        if du_lieu:
+            self.CapNhat_TxtAll(du_lieu)
+            self.Nhap_Trang_Thai(f'Chọn câu có id={du_lieu[0]}')
     
     def Nhap_Trang_Thai(self, trang_thai):
         '''Cho phép hiển thị trạng thái hiện tại'''
