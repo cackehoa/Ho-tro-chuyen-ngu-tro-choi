@@ -53,7 +53,8 @@ class DieuKhien:
         if len(txt_eng) < 2:
             self.hien_thi.text_eng.focus()
             return self.hien_thi.Nhap_Trang_Thai('Câu tiếng Anh không có nội dung')
-        if self.mo_hinh_csdl.Lay_Eng(txt_eng) is None:
+        du_lieu = self.mo_hinh_csdl.Lay_Eng(txt_eng)
+        if du_lieu is None:
             txt_vie = Loc_Khoang_Trang(self.hien_thi.Lay_Txt_Vie())
             if len(txt_vie) == 0:
                 self.hien_thi.text_vie.focus()
@@ -62,13 +63,14 @@ class DieuKhien:
             #Cập nhật id mới
             self.hien_thi.Cap_Nhat_Txt_ID(id_)
             self.Lay_Trang_Danh_Sach()
-            return self.hien_thi.Nhap_Trang_Thai(f'Lưu câu mới với id={id_}')
-        return self.hien_thi.Nhap_Trang_Thai('Câu tiếng Anh đã tồn tại')
+            return self.hien_thi.Nhap_Trang_Thai(f'Lưu câu mới với id={id_}: {txt_eng[0:30]}')
+        self.hien_thi.CapNhat_TxtAll(du_lieu)
+        return self.hien_thi.Nhap_Trang_Thai(f'Câu tiếng Anh đã tồn tại: {txt_eng[0:30]}')
             
     def Cap_Nhat_Cau_Goc(self):
         '''Cập nhật câu đang được chọn vào csdl'''
         id_ = self.hien_thi.Lay_Txt_Id()
-        if id_ ==0:
+        if id_ == 0:
             return self.hien_thi.Nhap_Trang_Thai('Chưa chọn câu nào')
         du_lieu = self.mo_hinh_csdl.Lay_Id(id_)
         if du_lieu is not None:
@@ -80,10 +82,12 @@ class DieuKhien:
                 if len(txt_eng) < 2:
                     self.hien_thi.text_eng.focus()
                     return self.hien_thi.Nhap_Trang_Thai('Câu tiếng Anh không có nội dung')
-                if self.mo_hinh_csdl.Lay_Eng(txt_eng) is None:
+                du_lieu_kt = self.mo_hinh_csdl.Lay_Eng(txt_eng)
+                if du_lieu_kt is None:
                     txt_vie = Loc_Khoang_Trang(self.hien_thi.Lay_Txt_Vie())
                     self.mo_hinh_csdl.Cap_Nhat_Cau_Goc(id_, txt_eng, txt_vie)
                 else:
+                    self.hien_thi.CapNhat_TxtAll(du_lieu_kt)
                     return self.hien_thi.Nhap_Trang_Thai('Câu tiếng Anh đã tồn tại')
             self.Lay_Trang_Danh_Sach()
             return self.hien_thi.Nhap_Trang_Thai(f'Câu có id={id_} được cập nhật')
@@ -172,7 +176,7 @@ class DieuKhien:
         self.mo_hinh_tep.Ghi_XUnity(hop_thoai['tep_dich'], ket_qua)
         self.mo_hinh_tep.Ghi_Khong_Chuyen_Ngu(khong_chuyen_ngu)
         self.hien_thi.Nhap_Trang_Thai('Xuất dữ liệu kiểu XUnity ra tệp thành công')
-        self.hien_thi.Hop_Thoai_Thong_Bao('Xuất dữ liệu kiểu XUnity ra tệp thành công')
+        self.hien_thi.Hop_Thoai_Thong_Bao(f'Xuất dữ liệu kiểu XUnity ra tệp thành công\n{hop_thoai["tep_dich"]}')
         
     def Nhap_Tep_Json(self):
         '''Nhập dữ liệu từ tệp Json vào csdl'''
@@ -222,11 +226,12 @@ class DieuKhien:
         du_lieu_json = self.mo_hinh_tep.Doc_Json(hop_thoai['tep_nguon'])
         khong_chuyen_ngu = []
         ket_qua_json = {}
+        #ket_qua_json = du_lieu_json
         self.mo_hinh_csdl.Chuyen_Ngu_Json(du_lieu_json, hop_thoai['co_dich'], ket_qua_json, khong_chuyen_ngu)
         self.mo_hinh_tep.Ghi_Json(hop_thoai['tep_dich'], ket_qua_json)
         self.mo_hinh_tep.Ghi_Khong_Chuyen_Ngu(khong_chuyen_ngu)
         self.hien_thi.Nhap_Trang_Thai('Xuất dữ liệu kiểu Json ra tệp thành công')
-        self.hien_thi.Hop_Thoai_Thong_Bao('Xuất dữ liệu kiểu Json ra tệp thành công')
+        self.hien_thi.Hop_Thoai_Thong_Bao(f'Xuất dữ liệu kiểu Json ra tệp thành công\n{hop_thoai["tep_dich"]}')
         
     def Nhap_Tep_Csv(self):
         '''Nhập dữ liệu từ tệp Csv vào csdl'''
@@ -264,7 +269,7 @@ class DieuKhien:
         self.mo_hinh_tep.Ghi_Csv(hop_thoai['tep_dich'], du_lieu_csv, hop_thoai['dau_phan_cach'])
         self.mo_hinh_tep.Ghi_Khong_Chuyen_Ngu(khong_chuyen_ngu)
         self.hien_thi.Nhap_Trang_Thai('Xuất dữ liệu kiểu Csv ra tệp thành công')
-        self.hien_thi.Hop_Thoai_Thong_Bao('Xuất dữ liệu kiểu Csv ra tệp thành công')
+        self.hien_thi.Hop_Thoai_Thong_Bao(f'Xuất dữ liệu kiểu Csv ra tệp thành công\n{hop_thoai["tep_dich"]}')
         
     def Nhap_Tep_Ini(self):
         '''Hàm nhập dữ liệu kiểu Ini vào csdl'''
@@ -292,13 +297,18 @@ class DieuKhien:
         if len(hop_thoai['tep_dich']) == 0:
             return self.hien_thi.Nhap_Trang_Thai('Không có tệp Ini đích để xuất ra')
         du_lieu_ini = self.mo_hinh_tep.Doc_Ini(hop_thoai['tep_nguon'])
+        #print((hop_thoai['tep_nguon'],hop_thoai['tep_dich']))
         khong_chuyen_ngu = []
-        ket_qua = {}
+        ket_qua = []
         self.mo_hinh_csdl.Chuyen_Ngu_Ini(du_lieu_ini, hop_thoai['co_dich'], ket_qua, khong_chuyen_ngu)
         self.mo_hinh_tep.Ghi_Ini(hop_thoai['tep_dich'], ket_qua)
         self.mo_hinh_tep.Ghi_Khong_Chuyen_Ngu(khong_chuyen_ngu)
         self.hien_thi.Nhap_Trang_Thai('Xuất dữ liệu kiểu Ini ra tệp thành công')
-        self.hien_thi.Hop_Thoai_Thong_Bao('Xuất dữ liệu kiểu Ini ra tệp thành công')
+        self.hien_thi.Hop_Thoai_Thong_Bao(f'Xuất dữ liệu kiểu Ini ra tệp thành công\n{hop_thoai["tep_dich"]}')
+        
+    def Luu_Du_Lieu_Sql(self):
+        self.mo_hinh_csdl.Luu_Du_Lieu_Sql()
+        self.hien_thi.Nhap_Trang_Thai('Lưu dữ liệu xuống cơ sở dữ liệu thành công')
         
     def Nen_Tep_Tin(self):
         '''Hàm chuyên nén tệp thành gzip'''
