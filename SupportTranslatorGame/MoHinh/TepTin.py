@@ -211,13 +211,14 @@ class TepTin:
         Đầu vào:
             ten_tep: string #Tên tệp
         Đầu ra:
-            ket_qua: dict{khoa_id : [(khoa,gia_tri)])}
+            ket_qua: list[(khoa_id, [(khoa,gia_tri)])]
         '''
         danh_sach_dong = []
         with open(ten_tep, "r", encoding = 'utf-8') as doc_tep:
             danh_sach_dong = doc_tep.readlines()
-        khoa_id = 'default'
-        ket_qua = {}
+        khoa_id = ('default', [])
+        ket_qua = []
+        ket_qua.append(khoa_id)
         for dong_l in danh_sach_dong:
             dong = dong_l.strip()
             #Bỏ qua dòng rỗng
@@ -229,28 +230,32 @@ class TepTin:
             #Kiểm tra có phải id không
             loc = re.findall(r'^\[([^\[]+)\]$', dong)
             if len(loc) == 1:
-                khoa_id = loc[0]
-                ket_qua[khoa_id] = []
+                khoa_id = (loc[0], [])
+                ket_qua.append(khoa_id)
                 continue
             tach_chuoi = dong.split('=')
             if len(tach_chuoi) == 2: #Bình thường
-                ket_qua[khoa_id].append((tach_chuoi[0], tach_chuoi[1]))
+                khoa_id[1].append((tach_chuoi[0], tach_chuoi[1]))
             elif len(tach_chuoi) == 1: #Lỗi mới xảy ra
-                ket_qua[khoa_id].append((tach_chuoi[0], ''))
+                khoa_id[1].append((tach_chuoi[0], ''))
             else: #Có vấn đề gì đó với dấu bằng (=)
-                ket_qua[khoa_id].append((tach_chuoi[0], '='.join(tach_chuoi[1:])))
+                khoa_id[1].append((tach_chuoi[0], '='.join(tach_chuoi[1:])))
+        #Xóa bỏ default nếu không tồn tại
+        if len(ket_qua) > 0:
+            if len(ket_qua[0][1]) == 0:
+                return ket_qua[1:]
         return ket_qua
         
     def Ghi_Ini(self, ten_tep, du_lieu):
         '''Ghi dữ liệu kiểu Ini ra tệp tin
         Đầu vào:
             ten_tep: string #Tên tệp
-            du_lieu: dict{khoa_id : [(khoa,gia_tri)])} #Dữ liệu cần ghi
+            du_lieu: ket_qua: list[(khoa_id, [(khoa,gia_tri)])] #Dữ liệu cần ghi
         '''
         with open(ten_tep, 'w', encoding = 'utf-8') as ghi_tep:
             for khoa_id in du_lieu:
-                ghi_tep.write(f'[{khoa_id}]\n')
-                for gia_tri in du_lieu[khoa_id]:
+                ghi_tep.write(f'[{khoa_id[0]}]\n')
+                for gia_tri in khoa_id[1]:
                     ghi_tep.write(f'{gia_tri[0]}={Chuyen_Doi_Ky_Tu_Dat_Biet(gia_tri[1])}\n')
                 ghi_tep.write('\n')
         
