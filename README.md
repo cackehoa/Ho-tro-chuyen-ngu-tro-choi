@@ -51,7 +51,7 @@ Mình chọn [SQLite](https://www.sqlite.org/) vì nó đơn giản và tiện (
 
 Mình nghĩ sau này sẽ viết code để trộn 2 cơ sở dữ liệu lại với nhau thành một cơ sở dữ liệu mới tổng hợp những gì đã có sẵn (mới lên ý tưởng, giờ chưa đâu)
 
-Tệp cơ sở dữ liệu mình share trên này đã nhập một số kết quả việt hoa một số game của mình.
+Tệp cơ sở dữ liệu mình share trên này đã nhập một số kết quả việt hóa một số game của mình.
 
 # Mô hình MVC:
 Mình dự tính sẽ phát triển ứng dụng nhiều hơn nếu cần nên mình sử dụng mô hình MVC và hướng đối tượng
@@ -98,6 +98,17 @@ Hello=Xin chào
 ````
 
 Tôi đã gặp khi việt hóa game: DoorKickers, [Car Mechanic Simulator](https://github.com/cackehoa/Car-Mechanic-Simulator-2018-Mercedes-Benz-viet-hoa)
+## 4. Lua (\*.lua):
+Ví dụ:
+````
+English = "Tiếng Anh",
+Hello = "Xin chào",
+Animal = {
+	Dog = "Chó",
+	Cat = "Mèo"
+}
+````
+
 # Hướng dẫn sử dụng chi tiết:
 Xem thêm tag Wiki nhé
 # Liên lạc và ủng hộ

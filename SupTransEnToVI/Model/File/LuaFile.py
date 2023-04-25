@@ -8,7 +8,7 @@ class LuaFile(TypeFile):
     def __init__(self, fileName):
         super().__init__(fileName)
 
-'''Đọc theo từng dòng trong tệp tin'''
+    '''Đọc theo từng dòng trong tệp tin'''
     def read_all(self):
         with open(self.get_file_name(), "r", encoding='utf-8') as fileRead:
             lines = fileRead.readlines()
