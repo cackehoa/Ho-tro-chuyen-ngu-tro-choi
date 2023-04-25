@@ -1,14 +1,12 @@
-#Main.py
-#Mình sẽ cố viết ứng dụng theo dạng MVC để sau này dễ quản lý
-#Tệp tin này với mục đích nhằm khởi chạy cả ứng dụng
-
+#main.py
+#Tiệp tin chính khởi chạy ứng dụng
 import os
-
-from SupportTranslatorGame import UngDung
+from SupTransEnToVI.Controller import GuiMain
 
 if __name__ == "__main__":
     '''Chạy ứng dụng'''
-    #tên tệp mặc định
-    tep_csdl = os.path.join(os.getcwd(), 'database.db')
-    ud = UngDung(tep_csdl)
-    ud.mainloop()
+    #Tệp csdl mặc định
+    fileDatabase = os.path.join(os.getcwd(), 'database.db')
+    gui = GuiMain()
+    gui.set_database(fileDatabase)
+    gui.mainloop()
