@@ -108,8 +108,8 @@ class TransEngToVie:
                     strSplit[i] = self.trans_try(strSplit[i])
                 return delimiter.join(strSplit)
         #Chi nhỏ câu theo rác
-        trashResult = re.findall(f"([\s]*[{patternTrash}]+[\s]*)", key)
-        if len(trashResult) > 0:
+        trashResult = re.findall(f"[\s]*[{patternTrash}]+[\s]*", key)
+        if trashResult:
             strSplit = key.split(trashResult[0])
             for i in range(len(strSplit)):
                 strSplit[i] = self.trans_try(strSplit[i])
@@ -201,3 +201,34 @@ class TransEngToVie:
                 continue
             result.append(line)
         return result
+
+    #Dịch trả về dữ liệu kiểu PZ
+    def trans_xml_cover_PZ(self, data, tryTrans):
+        resultData = []
+        if tryTrans == 0:
+            for LineEntry in data.iter('LineEntry'):
+                id_ = LineEntry.attrib['ID']
+                eng = self.controller.filter_whitespace(LineEntry.text)
+                isEng = True
+                for i in range(len(resultData)):
+                    if eng == resultData[i][0]:
+                        isEng = False
+                        resultData[i][2].append(id_)
+                        break
+                if isEng:
+                    vie = self.trans_normal(eng)
+                    resultData.append((eng, vie, [id_]))
+            return resultData
+        for LineEntry in data.iter('LineEntry'):
+            id_ = LineEntry.attrib['ID']
+            eng = self.controller.filter_whitespace(LineEntry.text)
+            isEng = True
+            for i in range(len(resultData)):
+                if eng == resultData[i][0]:
+                    isEng = False
+                    resultData[i][2].append(id_)
+                    break
+            if isEng:
+                vie = self.trans_try(eng)
+                resultData.append((eng, vie, [id_]))
+        return resultData

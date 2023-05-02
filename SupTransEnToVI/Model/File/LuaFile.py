@@ -76,7 +76,7 @@ class LuaFile(TypeFile):
                 valCom.append(text)
                 continue
             #Kiểm tra có phải biến tiêu chuẩn không
-            checkVar = re.findall('^([\s\S]*)=([\s\S]*)$', text)
+            checkVar = re.findall('^([^=]*)=([\s\S]*)$', text)
             if checkVar:
                 #Xử lý chuỗi nhiều dòng phía trước nhưng không có kết
                 if isStr:
@@ -150,7 +150,7 @@ class LuaFile(TypeFile):
                     col = len(line[2])
                     for i in range(col - 1):
                         fileWrite.write(f'"{line[2][i]}"..\n    ')
-                    fileWrite.write(f'"{line[2][col-1]}",\n')
+                    fileWrite.write(f'"{line[2][col-1]}"\n')
                     continue
                 if line[0] == 'list':
                     fileWrite.write(f'{line[1]} = ' + '{\n')
@@ -170,3 +170,30 @@ class LuaFile(TypeFile):
                     fileWrite.write('}\n')
                     continue
                 fileWrite.write(f'{line[1]}\n')
+
+    '''Viết riêng cho xử lý dữ liệu Project Zombie
+    Xuất ra tệp ngôn ngữ định dạng PZ
+    '''
+    def writeDataPZ(self, data):
+        with open(self.get_file_name(), 'w', encoding = 'utf-8') as fileWrite:
+            fileWrite.write('''// Localization Master Table
+// version: 1
+// guid: b73aa63e-6286-4c32-9e48-3b0024c22b51
+// Language: Vietnamese (VN)
+[Info]
+	guid = b73aa63e-6286-4c32-9e48-3b0024c22b51
+	language = VN
+	version = 1
+	translator = cackehoa
+	translator = LeTa
+	translator = thuytruc1502
+[/Info]''')
+            fileWrite.write('\n\n[Translations]\n\n')
+            for collection in data:
+                fileWrite.write('[Collection]\n')
+                fileWrite.write(f'    text = {collection[1]}\n')
+                fileWrite.write(f'    // {collection[0]}\n')
+                for member in collection[2]:
+                    fileWrite.write(f'    member = {member}\n')
+                fileWrite.write('[/Collection]\n')
+            fileWrite.write('[/Translations]\n')

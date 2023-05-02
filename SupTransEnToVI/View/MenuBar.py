@@ -43,6 +43,9 @@ class MenuBar(Menu):
         #importMenu.add_command(label="LUA", command = self.import_lua)
         #importMenu.add_command(label="XUnity", command = self.import_xunity)
         self.add_cascade(label="Nhập", menu=importMenu)
+        coverMenu = Menu(self, tearoff=0)
+        coverMenu.add_command(label="XML thành PZ", command = self.cover_xml)
+        self.add_cascade(label="Chuyển đổi", menu=coverMenu)
 
     def save_data(self):
         db = self.controller.get_database()
@@ -154,3 +157,27 @@ class MenuBar(Menu):
         self.controller.set_status('Chức năng này chưa được hoàng thành')
         messagebox.showinfo('Cảnh báo', 'Chức năng này chưa được hoàng thành')
         print(importXunity.dataConfig)
+
+    def cover_xml(self):
+        self.controller.set_status('Chuyển đổi XML thành LUA...')
+        typeFile = ('XML', '*.xml'), ('Tất cả', '*.*')
+        covertLua = ExportTwoDialog(self.controller, 'XML', typeFile)
+        sourceFile = covertLua.dataConfig['sourceFile']
+        sourceXML = XmlFile(sourceFile)
+        if not sourceXML.isFile():
+            self.controller.set_status('Tệp tin không tồn tại')
+            return
+        data = sourceXML.read_all()
+        trans = TransEngToVie(self.controller)
+        result = trans.trans_xml_cover_PZ(data, covertLua.dataConfig['tryTrans'])
+        destinationFile = covertLua.dataConfig['destinationFile']
+        if len(destinationFile) > 0:
+            destinationLua = LuaFile(destinationFile)
+            destinationLua.writeDataPZ(result)
+            mesage = f'Lưu thành công: {destinationFile}'
+        else:
+            sourceLua.writeDataPZ(result)
+            mesage = f'Lưu đè thành công: {sourceFile}'
+        self.controller.set_status(mesage)
+        messagebox.showinfo("Chuyển đổi XML sang LUA", mesage)
+        
