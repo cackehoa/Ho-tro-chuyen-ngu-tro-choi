@@ -25,6 +25,10 @@ class DbSqlite:
         self.conSqlite.execute(sql_create)
         print('Tạo bảng CAU_GOC thành công')
 
+    #Tạo con trỏ mới (dùng trong Thread)
+    def create_new_cursor(self):
+        return self.conSqlite.cursor()
+
     #Lấy tất cả từ khóa theo từng trang
     def get_allkeys(self, key, page):
         maxRow = 10
@@ -59,23 +63,31 @@ class DbSqlite:
 
     #Lấy theo eng
     def get_eng(self, eng):
+        return self.get_eng_thread(eng, self.cursor)
+
+    #Lấy theo eng (Thread)
+    def get_eng_thread(self, eng, cursor):
         sql_select = '''SELECT id, eng, vie
             FROM CAU_GOC
             WHERE eng=?
             '''
-        self.cursor.execute(sql_select, (eng,))
-        result = self.cursor.fetchone()
+        cursor.execute(sql_select, (eng,))
+        result = cursor.fetchone()
         return result
 
     #Lấy câu gần đúng ngắn nhất
     def get_like_eng(self, eng):
+        return self.get_like_eng_thread(eng, self.cursor)
+
+    #Lấy câu gần đúng ngắn nhất (Thread)
+    def get_like_eng_thread(self, eng, cursor):
         sql_select = '''SELECT id, eng, vie
             FROM CAU_GOC
             WHERE eng LIKE ?
             ORDER BY length(eng), eng
             '''
-        self.cursor.execute(sql_select, (f'%{eng}%',))
-        result = self.cursor.fetchone()
+        cursor.execute(sql_select, (f'%{eng}%',))
+        result = cursor.fetchone()
         return result
 
     #Thêm row mới vào database
@@ -108,4 +120,5 @@ class DbSqlite:
 
     #Đóng database an toàn
     def __del__(self):
+        self.cursor.close()
         self.conSqlite.close()

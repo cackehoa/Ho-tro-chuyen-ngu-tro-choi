@@ -45,7 +45,7 @@ class MenuBar(Menu):
         self.add_cascade(label="Nhập", menu=importMenu)
         coverMenu = Menu(self, tearoff=0)
         coverMenu.add_command(label="XML thành PZ", command = self.cover_xml)
-        self.add_cascade(label="Chuyển đổi", menu=coverMenu)
+        self.add_cascade(label="Dành riêng", menu=coverMenu)
 
     def save_data(self):
         db = self.controller.get_database()
@@ -65,15 +65,23 @@ class MenuBar(Menu):
         data  = sourceCSV.read_all()
         #Dịch
         trans = TransEngToVie(self.controller)
-        result = data[:1] + trans.trans_csv(data[1:], exportCsv.dataConfig['colEng'], exportCsv.dataConfig['colVie'], exportCsv.dataConfig['tryTrans'])
+        colVie = exportCsv.dataConfig['colVie']
+        colEng = exportCsv.dataConfig['colEng']
+        result = []
+        if colVie < 0 or colEng < 0:
+            colVie = -1
+            result = data
+        else:
+            result = trans.trans_csv(data[1:], colEng, colVie, exportCsv.dataConfig['tryTrans'])
+            result.insert(0, (data[0], None))
         destinationFile = exportCsv.dataConfig['destinationFile']
         if len(destinationFile) > 0:
             destinationCSV = CsvFile(destinationFile)
             destinationCSV.set_delimiter(exportCsv.dataConfig['delimiter'])
-            destinationCSV.write_data(result)
+            destinationCSV.write_data(result, colVie)
             mesage = f'Lưu thành công: {destinationFile}'
         else:
-            sourceCSV.write_data(result)
+            sourceCSV.write_data(result, colVie)
             mesage = f'Lưu đè thành công: {sourceFile}'
         self.controller.set_status(mesage)
         messagebox.showinfo("Xuất CSV", mesage)

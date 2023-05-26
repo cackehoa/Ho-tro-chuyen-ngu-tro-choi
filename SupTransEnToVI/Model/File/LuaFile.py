@@ -7,6 +7,8 @@ from .TypeFile import TypeFile
 class LuaFile(TypeFile):
     def __init__(self, fileName):
         super().__init__(fileName)
+        #self.str_normalize = [("\\\"","\""), ("\\n", "\n")]
+        self.str_re_normalize = [("\n", "\\n")]
 
     '''Đọc theo từng dòng trong tệp tin'''
     def read_all(self):
@@ -91,15 +93,18 @@ class LuaFile(TypeFile):
                 checkStr = re.findall('^"([\s\S]*)(?:"[\s]*,|")$', value)
                 if checkStr:
                     if isList:
-                        dataList.append(('var', key, [checkStr[0]]))
+                        eng = self.cover_normalize(checkStr[0])
+                        dataList.append(('var', key, [eng]))
                         continue
-                    result.append(('var', key, [checkStr[0]]))
+                    eng = self.cover_normalize(checkStr[0])
+                    result.append(('var', key, [eng]))
                     continue
                 #Kiểm tra giá trị chuỗi đa dòng dạng: "Chuỗi đa dòng"..
                 checkStr = re.findall('^"([\s\S]*)"[\s]*\.\.$', value)
                 if checkStr:
                     isStr = True
-                    valStr = [checkStr[0]]
+                    eng = self.cover_normalize(checkStr[0])
+                    valStr = [eng]
                     continue
                 #Bắt đầu list
                 if value == '{':
@@ -118,13 +123,15 @@ class LuaFile(TypeFile):
                 #Kiểm tra giá trị chuỗi đa dòng dạng: "Chuỗi đa dòng"..
                 checkStr = re.findall('^"([\s\S]*)"[\s]*\.\.$', text)
                 if checkStr:
-                    valStr.append(checkStr[0])
+                    eng = self.cover_normalize(checkStr[0])
+                    valStr.append(eng)
                     continue
                 #Kiểm tra giá trị chuỗi kết thúc đa dòng dạng: "Chuỗi kết thúc đa dòng",
                 checkStr = re.findall('^"([\s\S]*)(?:"[\s]*,|"[\s]*\.\.,|")$', text)
                 if checkStr:
                     isStr = False
-                    valStr.append(checkStr[0])
+                    eng = self.cover_normalize(checkStr[0])
+                    valStr.append(eng)
                     if isList:
                         dataList.append(('var', key, valStr))
                         continue
@@ -149,8 +156,10 @@ class LuaFile(TypeFile):
                     fileWrite.write(f'{line[1]} = ')
                     col = len(line[2])
                     for i in range(col - 1):
-                        fileWrite.write(f'"{line[2][i]}"..\n    ')
-                    fileWrite.write(f'"{line[2][col-1]}"\n')
+                        line[2][i].join()
+                        fileWrite.write(f'"{self.cover_re_normalize(line[2][i].get_vie())}"..\n    ')
+                    line[2][col-1].join()
+                    fileWrite.write(f'"{self.cover_re_normalize(line[2][col-1].get_vie())}"\n')
                     continue
                 if line[0] == 'list':
                     fileWrite.write(f'{line[1]} = ' + '{\n')
@@ -163,8 +172,10 @@ class LuaFile(TypeFile):
                             fileWrite.write(f'    {row[1]} = ')
                             col = len(row[2])
                             for i in range(col - 1):
-                                fileWrite.write(f'"{row[2][i]}"..\n        ')
-                            fileWrite.write(f'"{row[2][col-1]}",\n')
+                                row[2][i].join()
+                                fileWrite.write(f'"{self.cover_re_normalize(row[2][i].get_vie())}"..\n        ')
+                            row[2][col-1].join()
+                            fileWrite.write(f'"{self.cover_re_normalize(row[2][col-1].get_vie())}",\n')
                             continue
                         fileWrite.write(f'    {row[1]}\n')
                     fileWrite.write('}\n')
@@ -190,8 +201,9 @@ class LuaFile(TypeFile):
 [/Info]''')
             fileWrite.write('\n\n[Translations]\n\n')
             for collection in data:
+                collection[1].join()
                 fileWrite.write('[Collection]\n')
-                fileWrite.write(f'    text = {collection[1]}\n')
+                fileWrite.write(f'    text = {self.cover_re_normalize(collection[1].get_vie())}\n')
                 fileWrite.write(f'    // {collection[0]}\n')
                 for member in collection[2]:
                     fileWrite.write(f'    member = {member}\n')

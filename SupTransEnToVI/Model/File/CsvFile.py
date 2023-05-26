@@ -25,9 +25,7 @@ class CsvFile(TypeFile):
         with open(self.get_file_name(), "r", encoding = 'utf-8') as readFile:
             readCSV = csv.reader(readFile, delimiter = self.get_delimiter())
             for row in readCSV:
-                #Bỏ qua dòng trống
-                if len(row) != 0:
-                    result.append(row)
+                result.append(row)
         return result
 
     '''Chỉ đọc dữ liệu từ 2 cột cùng tập tin CSV
@@ -59,8 +57,18 @@ class CsvFile(TypeFile):
         result = []
         return result
 
-    def write_data(self, data):
+    def write_data(self, data, colVie = -1):
         with open(self.get_file_name(), 'w', encoding = 'utf-8', newline = '') as writeFile:
             writeCSV = csv.writer(writeFile, delimiter = self.get_delimiter())
             #Ghi nhiều hàng dữ liệu
-            writeCSV.writerows(data)
+            if colVie == -1:
+                writeCSV.writerows(data)
+            #Ghi từng hàng dữ liệu
+            else:
+                for row in data:
+                    if row[1] == None:
+                        writeCSV.writerow(row[0])
+                    else:
+                        row[1].join()
+                        row[0][colVie] = row[1].get_vie()
+                        writeCSV.writerow(row[0])

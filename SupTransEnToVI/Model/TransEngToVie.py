@@ -2,6 +2,7 @@
 Dịch tiếng Anh sang tiếng Việt
 '''
 import re
+from .TransEngToVieThread import TransEngToVieThread
 
 class TransEngToVie:
     def __init__(self, parent):
@@ -51,6 +52,7 @@ class TransEngToVie:
             return sqlResult[2]
         return key
 
+    #Cố dịch
     def trans_try(self, key):
         if len(key) < 2:
             return key
@@ -68,14 +70,14 @@ class TransEngToVie:
                 strSplit[i] = self.trans_try(strSplit[i])
             return strResult[0].join(strSplit)
         #Định nghĩa ký tự rác
-        patternTrash = '\\\*\+\-\.\,\(\)\[\]\{\}\?\^\$\"\'\|/><&#!…%@=:;_~`“”‘’'
+        patternTrash = '\\\*\+\-\.\,\(\)\[\]\{\}\?\^\$\"\'\|\s/><&#!…%@=:;_–~`“”‘’'
         #Lọc rác đầu chuỗi
         strResult = re.findall(f"^([{patternTrash}\s0-9]+)([\S\s]*)$", key)
-        if len(strResult) > 0:
+        if strResult:
             return strResult[0][0] + self.trans_try(strResult[0][1])
         #Lọc rác cuối chuỗi
         strResult = re.findall(f"^([{patternTrash}\s0-9]+)([\S\s]*)$", key[::-1])
-        if len(strResult) > 0:
+        if strResult:
             strTrash = strResult[0][0]
             strEnd = strResult[0][1]
             return self.trans_try(strEnd[::-1]) + strTrash[::-1]
@@ -100,13 +102,29 @@ class TransEngToVie:
                         vieEndRemaining = vieEndExcess[0][1]
                         return vieEndRemaining[::-1]
         #Chia nhỏ câu với hy vọng dịch từng đoạn có thể dịch
-        delimiterSplit = ['\n', '\\n', '.', '?', '!', '…', ';', ':', ',', '"', '*', '(', ')']
+        delimiterSplit = ['\n', '\\n', '.', '?', '!', '…', ';', ':', ',']
         for delimiter in delimiterSplit:
             strSplit = key.split(delimiter)
             if len(strSplit) > 1:
                 for i in range(len(strSplit)):
                     strSplit[i] = self.trans_try(strSplit[i])
                 return delimiter.join(strSplit)
+        #Chia nhỏ câu theo từ khóa giữa câu
+        keywords = [('but', 'nhưng'), ('But', 'Nhưng'), ('BUT', 'NHƯNG'),
+            ('because', 'bởi vì'), ('Because', 'Bởi vì'), ('BECAUSE', 'BỞI VÌ'),
+            ('if', 'nếu'), ('If', 'Nếu'), ('IF', 'NẾU'),
+            ('and', 'và'), ('And', 'Và'), ('AND', 'VÀ'),
+            ('or', 'hoặc'), ('Or', 'Hoặc'), ('OR', 'HOẶC')]
+        for keyword in keywords:
+            #Từ khóa ở giữa chia câu thành 2 phần
+            keywordResult = re.findall(f'^([\s\S]*) {re.escape(keyword[0])} ([\s\S]*)$', key)
+            if keywordResult:
+                return f'{self.trans_try(keywordResult[0][0])} {keyword[1]} {self.trans_try(keywordResult[0][1])}'
+            #Từ khóa ở đầu câu
+            keywordResult = re.findall(f'^{re.escape(keyword[0])} ([\s\S]+)$', key)
+            if keywordResult:
+                return f'{keyword[1]} {self.trans_try(keywordResult[0])}'
+            #Từ khóa ở cuối câu (tạm thời chưa viết nhằm giúp dịch nhanh hơn)
         #Chi nhỏ câu theo rác
         trashResult = re.findall(f"[\s]*[{patternTrash}]+[\s]*", key)
         if trashResult:
@@ -120,80 +138,48 @@ class TransEngToVie:
     def trans_csv(self, data, colEng, colVie, tryTrans = 0):
         result = []
         maxRow = max (colEng, colVie)
-        if tryTrans == 0:
-            for row in data:
-                if len(row) > maxRow:
-                    txtEng = self.controller.filter_whitespace(row[colEng])
-                    txtVie = self.trans_normal(txtEng)
-                    row[colVie] = txtVie
-                result.append(row)
-            return result
+        db = self.controller.get_database()
+        trans = None
         for row in data:
-            if len(row) > maxRow:
+            count = len(row)
+            #Bỏ qua dòng trống
+            if count == 0:
+                continue
+            elif count > maxRow:
                 txtEng = self.controller.filter_whitespace(row[colEng])
-                txtVie = self.trans_try(txtEng)
-                row[colVie] = txtVie
-            result.append(row)
+                trans = TransEngToVieThread(db, txtEng, tryTrans)
+                trans.start()
+            else:
+                trans = None
+            result.append((row, trans))
         return result
 
     #Dịch và trả về dữ liệu kiểu lua
     def trans_lua(self, data, tryTrans):
-        str_re_normalize = [("\n", "\\n")]
+        db = self.controller.get_database()
         result = []
-        if tryTrans == 0:
-            for line in data:
-                #Tìm phần cần dịch
-                if line[0] == 'var':
-                    listVar = []
-                    for value in line[2]:
-                        eng = self.normalize_data(value)
-                        eng = self.controller.filter_whitespace(eng)
-                        vie = self.trans_normal(eng)
-                        vie = self.re_normalize_data(vie, str_re_normalize)
-                        listVar.append(vie)
-                    result.append(('var', line[1], listVar))
-                    continue
-                if line[0] == 'list':
-                    listData = []
-                    for row in line[2]:
-                        if row[0] == 'var':
-                            listVar = []
-                            for value in row[2]:
-                                eng = self.normalize_data(value)
-                                eng = self.controller.filter_whitespace(eng)
-                                vie = self.trans_normal(eng)
-                                vie = self.re_normalize_data(vie, str_re_normalize)
-                                listVar.append(vie)
-                            listData.append(('var', row[1], listVar))
-                            continue
-                        listData.append(row)
-                    result.append(('list', line[1], listData))
-                    continue
-                result.append(line)
-            return result
         for line in data:
             #Tìm phần cần dịch
             if line[0] == 'var':
                 listVar = []
                 for value in line[2]:
-                    eng = self.normalize_data(value)
-                    eng = self.controller.filter_whitespace(eng)
-                    vie = self.trans_try(eng)
-                    vie = self.re_normalize_data(vie, str_re_normalize)
-                    listVar.append(vie)
+                    eng = self.controller.filter_whitespace(value)
+                    trans = TransEngToVieThread(db, eng, tryTrans)
+                    trans.start()
+                    listVar.append(trans)
                 result.append(('var', line[1], listVar))
                 continue
             if line[0] == 'list':
                 listData = []
                 for row in line[2]:
+                    #Tìm phần cần dịch
                     if row[0] == 'var':
                         listVar = []
                         for value in row[2]:
-                            eng = self.normalize_data(value)
-                            eng = self.controller.filter_whitespace(eng)
-                            vie = self.trans_try(eng)
-                            vie = self.re_normalize_data(vie, str_re_normalize)
-                            listVar.append(vie)
+                            eng = self.controller.filter_whitespace(value)
+                            trans = TransEngToVieThread(db, eng, tryTrans)
+                            trans.start()
+                            listVar.append(trans)
                         listData.append(('var', row[1], listVar))
                         continue
                     listData.append(row)
@@ -205,20 +191,7 @@ class TransEngToVie:
     #Dịch trả về dữ liệu kiểu PZ
     def trans_xml_cover_PZ(self, data, tryTrans):
         resultData = []
-        if tryTrans == 0:
-            for LineEntry in data.iter('LineEntry'):
-                id_ = LineEntry.attrib['ID']
-                eng = self.controller.filter_whitespace(LineEntry.text)
-                isEng = True
-                for i in range(len(resultData)):
-                    if eng == resultData[i][0]:
-                        isEng = False
-                        resultData[i][2].append(id_)
-                        break
-                if isEng:
-                    vie = self.trans_normal(eng)
-                    resultData.append((eng, vie, [id_]))
-            return resultData
+        db = self.controller.get_database()
         for LineEntry in data.iter('LineEntry'):
             id_ = LineEntry.attrib['ID']
             eng = self.controller.filter_whitespace(LineEntry.text)
@@ -229,6 +202,7 @@ class TransEngToVie:
                     resultData[i][2].append(id_)
                     break
             if isEng:
-                vie = self.trans_try(eng)
-                resultData.append((eng, vie, [id_]))
+                trans = TransEngToVieThread(db, eng, tryTrans)
+                trans.start()
+                resultData.append((eng, trans, [id_]))
         return resultData
