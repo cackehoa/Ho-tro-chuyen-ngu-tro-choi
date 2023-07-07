@@ -4,7 +4,7 @@
 from tkinter import Menu
 from .Dialog import *
 from ..Model.File import *
-from ..Model.TransEngToVie import TransEngToVie
+from ..Model.Trans import *
 from tkinter import messagebox
 
 class MenuBar(Menu):
@@ -64,7 +64,7 @@ class MenuBar(Menu):
             return
         data  = sourceCSV.read_all()
         #Dịch
-        trans = TransEngToVie(self.controller)
+        trans = EngToVieTrans(self.controller)
         colVie = exportCsv.dataConfig['colVie']
         colEng = exportCsv.dataConfig['colEng']
         result = []
@@ -72,7 +72,7 @@ class MenuBar(Menu):
             colVie = -1
             result = data
         else:
-            result = trans.trans_csv(data[1:], colEng, colVie, exportCsv.dataConfig['tryTrans'])
+            result = trans.trans_csv(data[1:], colEng, colVie, exportCsv.dataConfig['tryTrans'], exportCsv.dataConfig['escChar'])
             result.insert(0, (data[0], None))
         destinationFile = exportCsv.dataConfig['destinationFile']
         if len(destinationFile) > 0:
@@ -113,8 +113,8 @@ class MenuBar(Menu):
             return
         data = sourceLua.read_all()
         #Dịch
-        trans = TransEngToVie(self.controller)
-        result = trans.trans_lua(data, exportLua.dataConfig['tryTrans'])
+        trans = EngToVieTrans(self.controller)
+        result = trans.trans_lua(data, exportLua.dataConfig['tryTrans'], exportLua.dataConfig['escChar'])
         destinationFile = exportLua.dataConfig['destinationFile']
         if len(destinationFile) > 0:
             destinationLua = LuaFile(destinationFile)
@@ -176,8 +176,8 @@ class MenuBar(Menu):
             self.controller.set_status('Tệp tin không tồn tại')
             return
         data = sourceXML.read_all()
-        trans = TransEngToVie(self.controller)
-        result = trans.trans_xml_cover_PZ(data, covertLua.dataConfig['tryTrans'])
+        trans = EngToVieTrans(self.controller)
+        result = trans.trans_xml_cover_PZ(data, covertLua.dataConfig['tryTrans'], covertLua.dataConfig['escChar'])
         destinationFile = covertLua.dataConfig['destinationFile']
         if len(destinationFile) > 0:
             destinationLua = LuaFile(destinationFile)

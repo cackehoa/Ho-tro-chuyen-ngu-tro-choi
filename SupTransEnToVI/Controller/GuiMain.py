@@ -25,7 +25,7 @@ class GuiMain(tk.Tk):
         self.manual = ManualDataFrame(self)
 
     def set_database(self, fileDatabase):
-        self.dbSqlite = DbSqlite(fileDatabase)
+        self.dbSqlite = SqliteDb(fileDatabase)
         data = self.dbSqlite.get_allkeys('', 1)
         self.treev.set_treev(data)
     

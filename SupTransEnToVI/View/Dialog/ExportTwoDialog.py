@@ -13,14 +13,15 @@ class ExportTwoDialog(Dialog):
         self.dataConfig = {
             'sourceFile' : '',
             'destinationFile': '',
-            'tryTrans' : self.get_try_trans()
+            'tryTrans' : self.get_try_trans(),
+            'escChar' : []
             }
         super().__init__(parent, f'Xuất tệp {self.mTitle}')
 
     #Hiển thị phần thân hộp thoại
     def body(self, mainFrame):
-        ttk.Label(mainFrame, width=25, text='Tệp nguồn (tiếng Anh):').pack(side='top', fill='x')
         #Lấy tiệp nguồn tiếng Anh
+        ttk.Label(mainFrame, width=25, text='Tệp nguồn (tiếng Anh):').pack(side='top', fill='x')
         exportFileFrame = ttk.Frame(mainFrame)
         self.sourceFileEntry = ttk.Entry(exportFileFrame, textvariable='', width=40)
         self.sourceFileEntry.pack(side='left')
@@ -33,7 +34,14 @@ class ExportTwoDialog(Dialog):
         self.destinationFileEntry.pack(side='left')
         ttk.Button(destinationVieFrame, text='Duyệt...', command=self.button_destination_file).pack(side='left')
         destinationVieFrame.pack(side='top', fill='x')
+        #Kiểm tra cố dịch (mặc định là không)
         ttk.Checkbutton(mainFrame, text='Cố dịch (Dịch một phần nếu có thể)', variable=self.tryTrans, onvalue=1, offvalue=0).pack(side='top', fill='x')
+        #Danh sách cặp ký tự bỏ qua không dịch bên trong
+        ttk.Label(mainFrame, width=25, text='Danh sách cặp ký tự bỏ qua không dịch bên trong:\nPhân tách với nhau bằng dấu phẩy \',\'').pack(side='top', fill='x')
+        self.escCharEntry = ttk.Entry(mainFrame, textvariable='', width=40)
+        self.escCharEntry.pack(side='top', fill='x')
+        self.escCharEntry.delete(0, 'end')
+        self.escCharEntry.insert('end', '<>')
 
     #Đặt kiểu tệp cần lấy
     def get_type_file(self):
@@ -53,6 +61,17 @@ class ExportTwoDialog(Dialog):
     def get_try_trans(self):
         value = int(self.tryTrans.get())
         return value
+
+    #Trả về danh sách cặp ký tự bỏ qua không dịch bên trong
+    def get_esc_char_list(self):
+        result = []
+        value = self.escCharEntry.get()
+        listChar = value.split(',')
+        for row in listChar:
+            char2 = row.strip()
+            if len(char2) == 2:
+                result.append((char2[0], char2[1]))
+        return result
 
     #Hiển thị phần nút bấm hộp thoại
     def buttonbox(self):
@@ -82,4 +101,5 @@ class ExportTwoDialog(Dialog):
         self.dataConfig['sourceFile'] = self.get_source_file()
         self.dataConfig['destinationFile'] = self.get_destination_file()
         self.dataConfig['tryTrans'] = self.get_try_trans()
+        self.dataConfig['escChar'] = self.get_esc_char_list()
         self.destroy()

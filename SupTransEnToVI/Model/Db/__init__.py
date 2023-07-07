@@ -1,2 +1,2 @@
 #Định nghĩa gói thư viện
-from .DbSqlite import DbSqlite
+from .SqliteDb import SqliteDb

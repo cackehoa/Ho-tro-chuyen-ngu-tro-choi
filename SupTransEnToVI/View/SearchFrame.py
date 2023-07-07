@@ -22,8 +22,8 @@ class SearchFrame(ttk.Frame):
         treev.show_treev()
         
     def  set_key(self, value):
-         self.searchEntry.delete(0, 'end')
-         self.searchEntry.insert('end', value)
+        self.searchEntry.delete(0, 'end')
+        self.searchEntry.insert('end', value)
          
     def  get_key(self):
-         return self.searchEntry.get()
+        return self.searchEntry.get()
