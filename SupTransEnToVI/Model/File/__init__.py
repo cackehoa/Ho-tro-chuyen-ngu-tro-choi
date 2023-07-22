@@ -2,3 +2,4 @@
 from .CsvFile import CsvFile
 from .LuaFile import LuaFile
 from .XmlFile import XmlFile
+from .AvorionFile import AvorionFile

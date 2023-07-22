@@ -5,16 +5,17 @@ from tkinter import ttk, IntVar, filedialog
 from tkinter.simpledialog import Dialog
 
 class ExportTwoDialog(Dialog):
-    def __init__(self, parent, title, typeFile = (('TXT', '*.txt'), ('Tất cả', '*.*'))):
+    def __init__(self, parent, title, typeFile = (('TXT', '*.txt'), ('Tất cả', '*.*')), escChar = '<>'):
         #Cấu hình kiểu tệp cần mở
         self.typeFile = typeFile
         self.mTitle = title
         self.tryTrans = IntVar()
+        self.escChar = escChar #string
         self.dataConfig = {
             'sourceFile' : '',
             'destinationFile': '',
             'tryTrans' : self.get_try_trans(),
-            'escChar' : []
+            'escChar' : [] #list
             }
         super().__init__(parent, f'Xuất tệp {self.mTitle}')
 
@@ -41,7 +42,9 @@ class ExportTwoDialog(Dialog):
         self.escCharEntry = ttk.Entry(mainFrame, textvariable='', width=40)
         self.escCharEntry.pack(side='top', fill='x')
         self.escCharEntry.delete(0, 'end')
-        self.escCharEntry.insert('end', '<>')
+        #self.escCharEntry.insert('end', '<>')
+        #self.dataConfig
+        self.escCharEntry.insert('end', self.escChar)
 
     #Đặt kiểu tệp cần lấy
     def get_type_file(self):

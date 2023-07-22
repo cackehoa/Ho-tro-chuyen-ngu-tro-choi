@@ -10,7 +10,13 @@ class LuaFile(TypeFile):
         #self.str_normalize = [("\\\"","\""), ("\\n", "\n")]
         self.str_re_normalize = [("\n", "\\n")]
 
-    '''Đọc theo từng dòng trong tệp tin'''
+    '''Đọc theo từng dòng trong tệp tin
+    Đầu ra:
+        list : danh sách dữ liệu trong cặp '{' và '}'
+        com : danh sách kiểu chú thích liền kề
+        var : danh sách các biến và giá trị có dạng '^([^=]*)=([\s\S]*)$'
+        other : dạng chuỗi chưa xác định
+    '''
     def read_all(self):
         with open(self.get_file_name(), "r", encoding='utf-8') as fileRead:
             lines = fileRead.readlines()
@@ -144,13 +150,22 @@ class LuaFile(TypeFile):
             result.append(('other', text))
         return result
 
-    '''Ghi từng dòng ra tệp tin'''
+    '''Ghi từng dòng ra tệp tin
+    Đầu vào:
+        list : danh sách dữ liệu trong cặp '{' và '}'
+        com : danh sách kiểu chú thích liền kề
+        var : biến có dạng trả về là danh sách thread trans
+        other : dạng chuỗi chưa xác định
+    '''
     def write_data(self, data):
         with open(self.get_file_name(), 'w', encoding = 'utf-8') as fileWrite:
             for line in data:
                 if line[0] == 'com':
                     for com in line[1]:
                         fileWrite.write(f'{com}\n')
+                    continue
+                if line[0] == 'other':
+                    fileWrite.write(f'{line[1]}\n')
                     continue
                 if line[0] == 'var':
                     fileWrite.write(f'{line[1]} = ')
@@ -167,6 +182,9 @@ class LuaFile(TypeFile):
                         if row[0] == 'com':
                             for com in row[1]:
                                 fileWrite.write(f'    {com}\n')
+                            continue
+                        if row[0] == 'other':
+                            fileWrite.write(f'{row[1]}\n')
                             continue
                         if row[0] == 'var':
                             fileWrite.write(f'    {row[1]} = ')

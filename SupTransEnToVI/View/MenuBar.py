@@ -44,7 +44,8 @@ class MenuBar(Menu):
         #importMenu.add_command(label="XUnity", command = self.import_xunity)
         self.add_cascade(label="Nhập", menu=importMenu)
         coverMenu = Menu(self, tearoff=0)
-        coverMenu.add_command(label="XML thành PZ", command = self.cover_xml)
+        coverMenu.add_command(label="Dịch XML thành ProjectZomboid", command = self.cover_pz)
+        coverMenu.add_command(label="Avorion", command = self.export_avorion)
         self.add_cascade(label="Dành riêng", menu=coverMenu)
 
     def save_data(self):
@@ -64,7 +65,7 @@ class MenuBar(Menu):
             return
         data  = sourceCSV.read_all()
         #Dịch
-        trans = EngToVieTrans(self.controller)
+        trans = CsvTrans(self.controller)
         colVie = exportCsv.dataConfig['colVie']
         colEng = exportCsv.dataConfig['colEng']
         result = []
@@ -72,7 +73,7 @@ class MenuBar(Menu):
             colVie = -1
             result = data
         else:
-            result = trans.trans_csv(data[1:], colEng, colVie, exportCsv.dataConfig['tryTrans'], exportCsv.dataConfig['escChar'])
+            result = trans.trans_data(data[1:], colEng, colVie, exportCsv.dataConfig['tryTrans'], exportCsv.dataConfig['escChar'])
             result.insert(0, (data[0], None))
         destinationFile = exportCsv.dataConfig['destinationFile']
         if len(destinationFile) > 0:
@@ -113,8 +114,8 @@ class MenuBar(Menu):
             return
         data = sourceLua.read_all()
         #Dịch
-        trans = EngToVieTrans(self.controller)
-        result = trans.trans_lua(data, exportLua.dataConfig['tryTrans'], exportLua.dataConfig['escChar'])
+        trans = LuaTrans(self.controller)
+        result = trans.trans_data(data, exportLua.dataConfig['tryTrans'], exportLua.dataConfig['escChar'])
         destinationFile = exportLua.dataConfig['destinationFile']
         if len(destinationFile) > 0:
             destinationLua = LuaFile(destinationFile)
@@ -166,18 +167,22 @@ class MenuBar(Menu):
         messagebox.showinfo('Cảnh báo', 'Chức năng này chưa được hoàng thành')
         print(importXunity.dataConfig)
 
-    def cover_xml(self):
-        self.controller.set_status('Chuyển đổi XML thành LUA...')
+    '''Chuyển đổi và dịch dữ liệu xml sang dữ liệu đặt trưng của trò chơi Project Zomboid
+    Tệp nguồn XML: \media\radio\RadioData.xml
+    Chuyển đổi và dịch thành: \media\radio\*.txt
+    '''
+    def cover_pz(self):
+        self.controller.set_status('Dịch XML thành dữ liệu kiểu Project Zomboid...')
         typeFile = ('XML', '*.xml'), ('Tất cả', '*.*')
-        covertLua = ExportTwoDialog(self.controller, 'XML', typeFile)
+        covertLua = ExportTwoDialog(self.controller, 'XML', typeFile, '[]')
         sourceFile = covertLua.dataConfig['sourceFile']
         sourceXML = XmlFile(sourceFile)
         if not sourceXML.isFile():
             self.controller.set_status('Tệp tin không tồn tại')
             return
         data = sourceXML.read_all()
-        trans = EngToVieTrans(self.controller)
-        result = trans.trans_xml_cover_PZ(data, covertLua.dataConfig['tryTrans'], covertLua.dataConfig['escChar'])
+        trans = ProjectZomboidTrans(self.controller)
+        result = trans.trans_data(data, covertLua.dataConfig['tryTrans'], covertLua.dataConfig['escChar'])
         destinationFile = covertLua.dataConfig['destinationFile']
         if len(destinationFile) > 0:
             destinationLua = LuaFile(destinationFile)
@@ -189,3 +194,29 @@ class MenuBar(Menu):
         self.controller.set_status(mesage)
         messagebox.showinfo("Chuyển đổi XML sang LUA", mesage)
         
+    '''Việt hóa dữ liệu đặt biệt trong trò chơi Avorion
+    Tệp nguồn: data\localization\template.pot
+    Tệp đích: data\localization\*.po
+    '''
+    def export_avorion(self):
+        self.controller.set_status('Dịch tệp của trò chơi Avorion...')
+        typeFile = ('PO trong Avorion', '*.po'), ('Tất cả', '*.*')
+        coverAvorion = ExportTwoDialog(self.controller, 'PO', typeFile, '{}')
+        sourceFile = coverAvorion.dataConfig['sourceFile']
+        sourceAvorion = AvorionFile(sourceFile)
+        if not sourceAvorion.isFile():
+            self.controller.set_status('Tệp tin không tồn tại')
+            return
+        data = sourceAvorion.read_all()
+        trans = AvorionTrans(self.controller)
+        result = trans.trans_data(data, coverAvorion.dataConfig['tryTrans'], coverAvorion.dataConfig['escChar'])
+        destinationFile = coverAvorion.dataConfig['destinationFile']
+        if len(destinationFile) > 0:
+            destinationAvorion = AvorionFile(destinationFile)
+            destinationAvorion.write_data(result)
+            mesage = f'Lưu thành công: {destinationFile}'
+        else:
+            sourceAvorion.write_data(result)
+            mesage = f'Lưu đè thành công: {sourceFile}'
+        self.controller.set_status(mesage)
+        messagebox.showinfo("Dịch trò chơi Avorion", mesage)
