@@ -5,6 +5,7 @@ import os
 import sqlite3
 import re
 from datetime import datetime
+from .Sqlite import *
 
 class SqliteDb:
     def __init__(self, fileDatabase):
@@ -14,7 +15,18 @@ class SqliteDb:
         # Định nghĩa ký tự thoát (escape)
         self.escapeLike = [('\\', '\\\\'), ('%', '\\%'), ('_', '\\_')]
         if not isFile:
-            self.create_table()
+            self.create_table(self.conSqlite)
+            self.create_config_default()
+        self.get_config()
+        self.dbRoot = RootSent(self)
+        self.dbCache = CacheSent(self)
+        #print('Ngày', self.config['cache_update'])
+
+    def get_db_root(self):
+        return self.dbRoot
+
+    def get_db_cache(self):
+        return self.dbCache
 
     # Chèn ký tự thoát (escape)
     def escape_string_like(self, key):
@@ -24,156 +36,92 @@ class SqliteDb:
         return result
 
     #Tạo bảng tương ứng trong database mới tạo
-    def create_table(self):
-        sql_create = '''CREATE TABLE CAU_GOC (
+    def create_table(self, conSqlite):
+        #Tạo bảng cấu hình
+        sql_create = '''CREATE TABLE CONFIG_SENT (
+            id INTEGER  PRIMARY KEY AUTOINCREMENT,
+            root_update DATETIME DEFAULT CURRENT_TIMESTAMP,
+            cache_update DATETIME DEFAULT CURRENT_TIMESTAMP
+            );'''
+        conSqlite.execute(sql_create)
+        print('Tạo bảng CONFIG_SENT thành công')
+        #Tạo bảng câu gốc
+        sql_create = '''CREATE TABLE ROOT_SENT (
             id INTEGER  PRIMARY KEY AUTOINCREMENT,
             eng TEXT NOT NULL,
             vie TEXT DEFAULT '',
-            ngay_tao DATETIME DEFAULT CURRENT_TIMESTAMP,
-            ngay_sua DATETIME DEFAULT CURRENT_TIMESTAMP
+            day_create DATETIME DEFAULT CURRENT_TIMESTAMP,
+            day_update DATETIME DEFAULT CURRENT_TIMESTAMP
             );'''
-        self.conSqlite.execute(sql_create)
-        print('Tạo bảng CAU_GOC thành công')
+        conSqlite.execute(sql_create)
+        print('Tạo bảng ROOT_SENT thành công')
+        #Tạo bảng câu tạm
+        sql_create = '''CREATE TABLE CACHE_SENT (
+            id INTEGER  PRIMARY KEY AUTOINCREMENT,
+            eng TEXT NOT NULL,
+            vie TEXT DEFAULT '',
+            escChar TEXT DEFAULT '',
+            day_update DATETIME DEFAULT CURRENT_TIMESTAMP,
+            retrains INTEGER DEFAULT 0,
+            input_source INTEGER DEFAULT 0
+            );'''
+        conSqlite.execute(sql_create)
+        print('Tạo bảng CACHE_SENT thành công')
 
     #Tạo con trỏ mới (dùng trong Thread)
     def create_new_cursor(self):
         return self.conSqlite.cursor()
 
-    #Lấy tất cả từ khóa theo từng trang
-    def get_allkeys(self, key, page):
-        maxRow = 10
-        startRow = (page-1)*maxRow
-        if key == '':
-            sql_select = '''SELECT id, eng, vie
-                FROM CAU_GOC
-                ORDER BY eng
-                LIMIT ?, ?
-                '''
-            self.cursor.execute(sql_select, (startRow, maxRow))
-        else:
-            sql_select = '''SELECT id, eng, vie
-                FROM CAU_GOC
-                WHERE eng LIKE ? ESCAPE '\\'
-                ORDER BY length(eng), eng DESC
-                LIMIT ?, ?
-                '''
-            self.cursor.execute(sql_select, (f'%{self.escape_string_like(key)}%', startRow, maxRow))
-        result = self.cursor.fetchall()
-        return result
-
-    #Lấy theo id_
-    def get_id(self, id_):
-        sql_select = '''SELECT id, eng, vie
-            FROM CAU_GOC
-            WHERE id=?
-            '''
-        self.cursor.execute(sql_select, (id_,))
-        result = self.cursor.fetchone()
-        return result
-
-    #Tìm chính xác theo câu eng
-    def get_eng(self, eng):
-        return self.get_eng_thread(eng, self.cursor)
-
-    #Tìm chính xác theo câu eng (Thread)
-    def get_eng_thread(self, eng, cursor):
-        sql_select = '''SELECT id, eng, vie
-            FROM CAU_GOC
-            WHERE eng=?
-            '''
-        cursor.execute(sql_select, (eng,))
-        result = cursor.fetchone()
-        return result
-
-    #Lấy câu gần đúng ngắn nhất
-    def get_like_eng(self, eng):
-        return self.get_like_eng_thread(eng, self.cursor)
-
-    #Lấy câu gần đúng ngắn nhất (Thread)
-    def get_like_eng_thread(self, eng, cursor):
-        sql_select = '''SELECT id, eng, vie
-            FROM CAU_GOC
-            WHERE eng LIKE ? ESCAPE '\\'
-            ORDER BY length(eng), eng DESC
-            '''
-        cursor.execute(sql_select, (f'%{self.escape_string_like(eng)}%',))
-        result = cursor.fetchone()
-        return result
-
-    #Lấy câu gần đúng ngắn nhất (Thread)
-    def get_glob_eng_thread(self, eng, cursor):
-        sql_select = '''SELECT id, eng, vie
-            FROM CAU_GOC
-            WHERE eng GLOB ?
-            ORDER BY length(eng), eng DESC
-            '''
-        cursor.execute(sql_select, (f'*{eng}*',))
-        result = cursor.fetchone()
-        return result
-
-    #Lấy câu gần đúng phía trước ngắn nhất (Thread)
-    def get_like_front_eng_thread(self, eng, cursor):
-        sql_select = '''SELECT id, eng, vie
-            FROM CAU_GOC
-            WHERE eng LIKE ? ESCAPE '\\'
-            ORDER BY length(eng), eng DESC
-            '''
-        cursor.execute(sql_select, (f'%{self.escape_string_like(eng)}',))
-        result = cursor.fetchone()
-        return result
+    #Lấy con trỏ của luồng chính
+    def get_cursor(self):
+        return self.cursor
 
     
-    #Lấy câu gần đúng ở giữa ngắn nhất (Thread)
-    def get_like_middle_eng_thread(self, eng1, eng2, cursor):
-        sql_select = '''SELECT id, eng, vie
-            FROM CAU_GOC
-            WHERE eng LIKE ? ESCAPE '\\'
-            ORDER BY length(eng), eng DESC
-            '''
-        cursor.execute(sql_select, (f'{self.escape_string_like(eng1)}%{self.escape_string_like(eng2)}%',))
-        result = cursor.fetchone()
-        return result
+    '''--------------------------------------------------------------------------------
+    Đây là phần code cho bảng cấu hình (CONFIG_SENT)
+    Lưu lại thông tin cấu hình xuống cơ sở dữ liệu
+    - root_update: ngày cập nhật thay đổi cũ nhất
+    --------------------------------------------------------------------------------'''
 
-    #Lấy câu gần đúng phía sau ngắn nhất (Thread)
-    def get_like_rear_eng_thread(self, eng, cursor):
-        sql_select = '''SELECT id, eng, vie
-            FROM CAU_GOC
-            WHERE eng LIKE ? ESCAPE '\\'
-            ORDER BY length(eng), eng DESC
+    #Tạo dữ liệu cấu hình mặc định
+    def create_config_default(self):
+        sql_insert = '''INSERT INTO CONFIG_SENT(root_update)
+            VALUES(?)
             '''
-        cursor.execute(sql_select, (f'{self.escape_string_like(eng)}%',))
-        result = cursor.fetchone()
-        return result
-
-    #Thêm row mới vào database
-    def new_row(self, eng, vie):
-        sql_insert = '''INSERT INTO CAU_GOC(eng, vie)
-            VALUES(?,?)
-            '''
-        self.cursor.execute(sql_insert, (eng, vie))
+        time_default = datetime.now()
+        self.cursor.execute(sql_insert, (time_default,))
+        self.config['cache_update'] = time_default
+        self.config['root_update'] = time_default
         return self.cursor.lastrowid
 
-    #Cập nhật row vào database
-    def update_row(self, id_, eng, vie):
-        sql_update = '''UPDATE CAU_GOC
-            SET eng= ?,
-                vie = ?,
-                ngay_sua = ?
-            WHERE  id = ?
+    #Lấy ngày cập nhật cũ nhất
+    def get_config(self):
+        #Lấy dữ liệu đầu tiên
+        sql_select = '''SELECT id, cache_update,root_update
+            FROM CONFIG_SENT
+            ORDER BY id
             '''
-        self.cursor.execute(sql_update, (eng, vie, datetime.now(), id_))
+        self.cursor.execute(sql_select)
+        config = self.cursor.fetchone()
+        self.config = {}
+        #Thường sẽ không xảy ra nhưng cứ kiểm tra cho chắc
+        if config is None:
+            self.create_config_default()
+            return
+        self.config['cache_update'] = config[1]
+        self.config['root_update'] = config[2]
 
-    #Xóa row khỏi database
-    def delete_row(self, id_):
-        sql_delete = '''DELETE FROM CAU_GOC
-        WHERE  id = ?
-        '''
-        self.cursor.execute(sql_delete, (id_,))
+    #Lưu ngày cập nhật hiện tại
+    def set_config_root_update(self):
+        sql_update = '''UPDATE CONFIG_SENT
+            SET root_update = ?
+            '''
+        self.cursor.execute(sql_update, (datetime.now(),))
 
     #Thật sự lưu dữ liệu xuống tiệp tin database
     def save_database(self):
         self.conSqlite.commit()
-
+    
     #Đóng database an toàn
     def __del__(self):
         self.cursor.close()

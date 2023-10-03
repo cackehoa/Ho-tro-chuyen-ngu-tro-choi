@@ -12,8 +12,8 @@ import threading
 from .EngToVieTrans import EngToVieTrans
 
 class EngToVieThreadTrans(threading.Thread):
-    def __init__(self, db, eng, tryTrans = 0, escChar = []):
-        self.db = db
+    def __init__(self, parent, eng, tryTrans = 0, escChar = []):
+        self.controller = parent
         self.tryTrans = tryTrans
         self.escChar = escChar
         self.set_eng(eng)
@@ -38,8 +38,9 @@ class EngToVieThreadTrans(threading.Thread):
     #Hàm chạy mặt định của luồng
     def run(self):
         #Cấp phát con trỏ dành riêng cho luồng
-        cursor = self.db.create_new_cursor()
-        trans = EngToVieTrans(self.db, cursor, self.escChar)
+        db = self.controller.get_database()
+        cursor = db.create_new_cursor()
+        trans = EngToVieTrans(self.controller, cursor, self.escChar)
         if self.tryTrans:
             self.set_vie(trans.trans_try(self.get_eng()))
         else:

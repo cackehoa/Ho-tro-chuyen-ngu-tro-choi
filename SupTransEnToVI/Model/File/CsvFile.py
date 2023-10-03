@@ -57,18 +57,10 @@ class CsvFile(TypeFile):
         result = []
         return result
 
-    def write_data(self, data, colVie = -1):
+    def write_data(self, data):
         with open(self.get_file_name(), 'w', encoding = 'utf-8', newline = '') as writeFile:
             writeCSV = csv.writer(writeFile, delimiter = self.get_delimiter())
             #Ghi nhiều hàng dữ liệu
-            if colVie == -1:
-                writeCSV.writerows(data)
+            writeCSV.writerows(data)
             #Ghi từng hàng dữ liệu
-            else:
-                for row in data:
-                    if row[1] == None:
-                        writeCSV.writerow(row[0])
-                    else:
-                        row[1].join()
-                        row[0][colVie] = row[1].get_vie()
-                        writeCSV.writerow(row[0])
+            #writeCSV.writerow(row[0])

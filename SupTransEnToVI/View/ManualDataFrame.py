@@ -2,6 +2,8 @@
 Bộ nhập liệu thủ công
 '''
 from tkinter import ttk, Text
+from ..Model.Trans import DatabaseTrans
+from ..Model.Trans.EngToVieTrans import EngToVieTrans
 
 class ManualDataFrame(ttk.Frame):
     def __init__(self, parent):
@@ -28,6 +30,8 @@ class ManualDataFrame(ttk.Frame):
         self.refreshButton.pack(side = 'left', padx = 4)
         self.deleteButton = ttk.Button(buttonFrame, text='Xóa', command=self.button_delete)
         self.deleteButton.pack(side = 'left', padx = 4)
+        self.testButton = ttk.Button(buttonFrame, text='Test', command=self.update_all_temp_sent)
+        self.testButton.pack(side = 'left', padx = 4)
         self.hide_button()
 
     #Lấy id
@@ -86,28 +90,35 @@ class ManualDataFrame(ttk.Frame):
         if eng == vie or len(vie) < 1:
             self.controller.set_status(f"Hình như chưa dịch: {eng}")
             return
+        #Tắt bộ động
+        self.controller.stop_dynamic()
         db = self.controller.get_database()
-        row = db.get_eng(eng)
+        #Lấy câu gốc
+        sent = db.dbRoot.get_eng(eng)
         #Tạo mới
-        if row is None:
-            id_ = db.new_row(eng, vie)
-            #Cập nhật lại thay đổi
-            self.set_id(id_)
+        if sent is None:
+            id_ = db.dbRoot.new_sent(eng, vie)
+            text = EngToVieTrans.filter_trash(eng)
+            db.dbCache.set_retrains(text[1])
+            #Cập nhật lại tree
             treev = self.controller.get_treeview()
-            treev.set_key(eng)
-            treev.set_page(1)
-            treev.show_treev()
+            treev.refresh_treev(eng)
+            #Cập nhật hiển thị
+            self.set_id(id_)
             self.set_eng(eng)
             self.set_vie(vie)
-            self.controller.set_status(f"Câu {id_} mới: {eng}")
+            self.controller.set_status(f"CÂU MỚI {id_}: {eng}")
             self.show_button()
+            self.controller.start_dynamic(True)
             return
         #Hiển thị dữ liệu đã có
-        self.set_id(row[0])
-        self.set_eng(row[1])
-        self.set_vie(row[2])
+        self.set_id(sent[0])
+        self.set_eng(sent[1])
+        self.set_vie(sent[2])
         self.controller.set_status(f"Câu đã tồn tại: {eng}")
         self.show_button()
+        #Bật bộ động
+        self.controller.start_dynamic()
 
     #Cập nhật mới dữ liệu
     def button_update(self):
@@ -124,44 +135,68 @@ class ManualDataFrame(ttk.Frame):
         if eng == vie or len(vie) < 1:
             self.controller.set_status(f"Hình như chưa dịch: {eng}")
             return
+        #Tắt bộ động
+        self.controller.stop_dynamic()
         db = self.controller.get_database()
-        row = db.get_eng(eng)
-        if row is not None:
-            if id_ != int(row[0]):
+        sent = db.dbRoot.get_eng(eng)
+        if sent is not None:
+            if id_ != int(sent[0]):
                 self.controller.set_status(f"Câu đã tồn tại: {eng}")
+                self.controller.start_dynamic()
                 return
-        db.update_row(id_, eng, vie)
+        db.dbRoot.update_sent(id_, eng, vie)
+        text = EngToVieTrans.filter_trash(eng)
+        db.dbCache.set_retrains(text[1])
+        '''cache = db.dbCache.get_count_data_sent(text[1])
+        print('Số bộ đệm bị ảnh hưởng', len(cache))
+        print(cache)'''
+        #Cập nhật lại tree
         treev = self.controller.get_treeview()
-        treev.set_key(eng)
-        treev.set_page(1)
-        treev.show_treev()
+        treev.refresh_treev(eng)
+        #Cập nhật hiển thị
         self.set_eng(eng)
         self.set_vie(vie)
         self.controller.set_status(f"Cập nhật {id_}: {eng}")
+        #Bật bộ động
+        self.controller.start_dynamic(True)
+
+    #Dịch lại toàn bộ dữ liệu tạm
+    def update_all_temp_sent(self):
+        print('Đây là phần thử nghiệm')
 
     #Xóa dữ liệu
     def button_delete(self):
         id_ = self.get_id()
         eng = self.get_eng()
+        #Tắt bộ động
+        self.controller.stop_dynamic()
         db = self.controller.get_database()
-        db.delete_row(id_)
+        db.dbRoot.delete_sent(id_)
         self.set_id(0)
+        #Cập nhật lại tree
         treev = self.controller.get_treeview()
         treev.show_treev()
         self.controller.set_status(f"Xóa {id_}: {eng}")
         self.hide_button()
+        #Bật bộ động
+        self.controller.start_dynamic()
 
     #Trả về giá trị trước đó
     def button_refresh(self):
         id_ = self.get_id()
+        #Tắt bộ động
+        self.controller.stop_dynamic()
         db = self.controller.get_database()
-        row = db.get_id(id_)
+        row = db.dbRoot.get_id(id_)
         if row is None:
             self.set_id(0)
             self.controller.set_status(f"Có lỗi không xác định với: {id_}")
             self.hide_button()
+            self.controller.start_dynamic()
             return
         self.set_eng(row[1])
         self.set_vie(row[2])
         self.controller.set_status(f"Làm mới giá trị: {id_}")
+        #Bật bộ động
+        self.controller.start_dynamic()
         

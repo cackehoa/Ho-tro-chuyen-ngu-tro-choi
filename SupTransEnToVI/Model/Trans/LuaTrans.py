@@ -1,9 +1,11 @@
 '''LuaTrans.py
-Dịch tiếng Anh sang tiếng Việt
+Đầu vào chuẩn danh sách biến dữ liệu kiểu Lua
+Độ sâu cấp: 1
 '''
 
 from .EngToVieThreadTrans import EngToVieThreadTrans
 
+'''Tạo đa luồng nhằm tăng tốc'''
 class LuaTrans:
     def __init__(self, parent):
         self.controller = parent

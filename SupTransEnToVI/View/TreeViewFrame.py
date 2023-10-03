@@ -24,11 +24,24 @@ class TreeViewFrame(ttk.Treeview):
         ttk.Button(bottomFrame, text='>', command=lambda: self.show_treev('>')).pack(side='left')
         bottomFrame.pack()
 
+    #Từ khóa
     def set_key(self, key):
         self.key = key
 
     def get_key(self):
         return self.key
+
+    #Trang
+    def set_page(self, page):
+        page = int(page)
+        if page < 1:
+            page = 1
+        self.pageEntry.delete(0, 'end')
+        self.pageEntry.insert('end', page)
+
+    def get_page(self):
+        page = int(self.pageEntry.get())
+        return page
 
     def show_treev(self, action = 'auto'):
         page = self.get_page()
@@ -37,10 +50,12 @@ class TreeViewFrame(ttk.Treeview):
         elif action == '<':
             page = page - 1
         self.set_page(page)
+        self.controller.stop_dynamic()
         db = self.controller.get_database()
-        data = db.get_allkeys(self.get_key(), page)
+        data = db.dbRoot.get_allkeys(self.get_key(), page)
         self.set_treev(data)
         self.controller.set_status(f"Trang {page} với từ khóa: {self.get_key()}")
+        self.controller.start_dynamic()
 
     def set_treev(self, data):
         self.delete(*self.get_children())
@@ -52,8 +67,9 @@ class TreeViewFrame(ttk.Treeview):
         data = self.item(item, 'values')
         if data:
             id_ = data[0]
+            self.controller.stop_dynamic()
             db = self.controller.get_database()
-            data = db.get_id(id_)
+            data = db.dbRoot.get_id(id_)
             if data is None:
                 self.controller.set_status("Không có dữ liệu trong database.")
             else:
@@ -63,16 +79,12 @@ class TreeViewFrame(ttk.Treeview):
                 manual.set_vie(data[2])
                 self.controller.set_status(f"Câu {id_}: {data[1]}")
                 manual.show_button()
+            self.controller.start_dynamic()
         else:
             self.controller.set_status("Không có dữ liệu trên treeview.")
 
-    def set_page(self, page):
-        page = int(page)
-        if page < 1:
-            page = 1
-        self.pageEntry.delete(0, 'end')
-        self.pageEntry.insert('end', page)
-
-    def get_page(self):
-        page = int(self.pageEntry.get())
-        return page
+    #Cập nhật treeview với từ khóa mới
+    def refresh_treev(self, key):
+        self.set_key(key)
+        self.set_page(1)
+        self.show_treev()

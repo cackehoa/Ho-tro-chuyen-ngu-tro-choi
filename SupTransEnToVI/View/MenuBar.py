@@ -3,6 +3,7 @@
 '''
 from tkinter import Menu
 from .Dialog import *
+from .Toplevel import *
 from ..Model.File import *
 from ..Model.Trans import *
 from tkinter import messagebox
@@ -30,19 +31,19 @@ class MenuBar(Menu):
         #Menu xuất
         exportMenu = Menu(self, tearoff=0)
         exportMenu.add_command(label="CSV", command = self.export_csv)
-        #exportMenu.add_command(label="INI", command = self.export_ini)
+        exportMenu.add_command(label="INI", command = self.export_ini)
         #exportMenu.add_command(label="JSON", command = self.export_json)
         exportMenu.add_command(label="LUA", command = self.export_lua)
         #exportMenu.add_command(label="XUnity", command = self.export_xunity)
         self.add_cascade(label="Xuất", menu=exportMenu)
-        #Menu nhập
+        '''#Menu nhập
         importMenu = Menu(self, tearoff=0)
         #importMenu.add_command(label="CSV", command = self.import_csv)
         #importMenu.add_command(label="INI", command = self.import_ini)
         #importMenu.add_command(label="JSON", command = self.import_json)
         #importMenu.add_command(label="LUA", command = self.import_lua)
         #importMenu.add_command(label="XUnity", command = self.import_xunity)
-        self.add_cascade(label="Nhập", menu=importMenu)
+        self.add_cascade(label="Nhập", menu=importMenu)'''
         coverMenu = Menu(self, tearoff=0)
         coverMenu.add_command(label="Dịch XML thành ProjectZomboid", command = self.cover_pz)
         coverMenu.add_command(label="Avorion", command = self.export_avorion)
@@ -64,35 +65,48 @@ class MenuBar(Menu):
             self.controller.set_status('Tệp tin không tồn tại')
             return
         data  = sourceCSV.read_all()
-        #Dịch
-        trans = CsvTrans(self.controller)
-        colVie = exportCsv.dataConfig['colVie']
-        colEng = exportCsv.dataConfig['colEng']
-        result = []
-        if colVie < 0 or colEng < 0:
-            colVie = -1
-            result = data
-        else:
-            result = trans.trans_data(data[1:], colEng, colVie, exportCsv.dataConfig['tryTrans'], exportCsv.dataConfig['escChar'])
-            result.insert(0, (data[0], None))
+        #Xác định đối tượng lưu
+        destinationCSV = sourceCSV
         destinationFile = exportCsv.dataConfig['destinationFile']
         if len(destinationFile) > 0:
             destinationCSV = CsvFile(destinationFile)
             destinationCSV.set_delimiter(exportCsv.dataConfig['delimiter'])
-            destinationCSV.write_data(result, colVie)
-            mesage = f'Lưu thành công: {destinationFile}'
+        #Không xử lý gì khi dữ liệu đầu vào sai
+        colVie = exportCsv.dataConfig['colVie']
+        colEng = exportCsv.dataConfig['colEng']
+        if colVie < 0 or colEng < 0:
+            destinationCSV.write_data(data)
+            self.controller.set_status(f'Lưu thành công: {destinationFile}')
         else:
-            sourceCSV.write_data(result, colVie)
-            mesage = f'Lưu đè thành công: {sourceFile}'
-        self.controller.set_status(mesage)
-        messagebox.showinfo("Xuất CSV", mesage)
+            #Tắt bộ động
+            self.controller.stop_dynamic()
+            #Dịch
+            trans = CsvTrans(self.controller)
+            trans.trans_data(data, colEng, colVie, exportCsv.dataConfig['tryTrans'], exportCsv.dataConfig['escChar'])
+            self.controller.set_status(f'Chờ dịch: {sourceFile}')
+            progressCsv = ProgressToplevel(self.controller, trans, destinationCSV, sourceFile)
 
     def export_ini(self):
         typeFile = ('INI', '*.ini'), ('Tất cả', '*.*')
         exportIni = ExportTwoDialog(self.controller, 'INI', typeFile)
-        self.controller.set_status('Chức năng này chưa được hoàng thành')
-        messagebox.showinfo('Cảnh báo', 'Chức năng này chưa được hoàng thành')
-        print(exportIni.dataConfig)
+        sourceFile = exportIni.dataConfig['sourceFile']
+        sourceIni = IniFile(sourceFile)
+        if not sourceIni.isFile():
+            self.controller.set_status('Tệp tin không tồn tại')
+            return
+        data  = sourceIni.read_all()
+        #Xác định đối tượng lưu
+        destinationIni = sourceIni
+        destinationFile = exportIni.dataConfig['destinationFile']
+        if len(destinationFile) > 0:
+            destinationIni = IniFile(destinationFile)
+        #Tắt bộ động
+        self.controller.stop_dynamic()
+        #Dịch
+        trans = IniTrans(self.controller)
+        trans.trans_data(data, exportIni.dataConfig['tryTrans'], exportIni.dataConfig['escChar'])
+        progressIni = ProgressToplevel(self.controller, trans, destinationIni, sourceFile)
+        self.controller.set_status(f'Chờ dịch: {sourceFile}')
 
     def export_json(self):
         self.controller.set_status('Xuất JSON...')
@@ -112,18 +126,18 @@ class MenuBar(Menu):
         if not sourceLua.isFile():
             self.controller.set_status('Tệp tin không tồn tại')
             return
+        #Tắt bộ động
+        self.controller.stop_dynamic()
         data = sourceLua.read_all()
         #Dịch
         trans = LuaTrans(self.controller)
         result = trans.trans_data(data, exportLua.dataConfig['tryTrans'], exportLua.dataConfig['escChar'])
         destinationFile = exportLua.dataConfig['destinationFile']
+        destinationLua = sourceLua
         if len(destinationFile) > 0:
             destinationLua = LuaFile(destinationFile)
-            destinationLua.write_data(result)
-            mesage = f'Lưu thành công: {destinationFile}'
-        else:
-            sourceLua.write_data(result)
-            mesage = f'Lưu đè thành công: {sourceFile}'
+        destinationLua.write_data(result)
+        mesage = f'Lưu thành công: {destinationFile}'
         self.controller.set_status(mesage)
         messagebox.showinfo("Xuất lua", mesage)
 
@@ -135,10 +149,11 @@ class MenuBar(Menu):
         print(exportXUnity.dataConfig)
 
     def import_csv(self):
-        importCsv = ImportCsvDialog(self.controller)
+        #importCsv = ImportCsvDialog(self.controller)
+        #importCsv = ProgressDialog(self.controller)
         self.controller.set_status('Chức năng này chưa được hoàng thành')
         messagebox.showinfo('Cảnh báo', 'Chức năng này chưa được hoàng thành')
-        print(importCsv.dataConfig)
+        #print(importCsv.dataConfig)
 
     def import_ini(self):
         typeFile = ('INI', '*.ini'), ('Tất cả', '*.*')
@@ -180,17 +195,18 @@ class MenuBar(Menu):
         if not sourceXML.isFile():
             self.controller.set_status('Tệp tin không tồn tại')
             return
+        #Tắt bộ động
+        self.controller.stop_dynamic()
+        #Dịch
         data = sourceXML.read_all()
         trans = ProjectZomboidTrans(self.controller)
         result = trans.trans_data(data, covertLua.dataConfig['tryTrans'], covertLua.dataConfig['escChar'])
         destinationFile = covertLua.dataConfig['destinationFile']
-        if len(destinationFile) > 0:
-            destinationLua = LuaFile(destinationFile)
-            destinationLua.writeDataPZ(result)
-            mesage = f'Lưu thành công: {destinationFile}'
-        else:
-            sourceLua.writeDataPZ(result)
-            mesage = f'Lưu đè thành công: {sourceFile}'
+        if len(destinationFile) < 1:
+            destinationFile = sourceFile + '.temp'
+        destinationLua = LuaFile(destinationFile)
+        destinationLua.writeDataPZ(result)
+        mesage = f'Lưu thành công: {destinationFile}'
         self.controller.set_status(mesage)
         messagebox.showinfo("Chuyển đổi XML sang LUA", mesage)
         
@@ -203,20 +219,19 @@ class MenuBar(Menu):
         typeFile = ('PO trong Avorion', '*.po'), ('Tất cả', '*.*')
         coverAvorion = ExportTwoDialog(self.controller, 'PO', typeFile, '{}')
         sourceFile = coverAvorion.dataConfig['sourceFile']
-        sourceAvorion = AvorionFile(sourceFile)
+        sourceAvorion = AvorionFile(sourceFile, self.controller)
         if not sourceAvorion.isFile():
             self.controller.set_status('Tệp tin không tồn tại')
             return
+        #Tắt bộ động
+        self.controller.stop_dynamic()
+        #Dịch
         data = sourceAvorion.read_all()
         trans = AvorionTrans(self.controller)
-        result = trans.trans_data(data, coverAvorion.dataConfig['tryTrans'], coverAvorion.dataConfig['escChar'])
+        trans.trans_data(data, coverAvorion.dataConfig['tryTrans'], coverAvorion.dataConfig['escChar'])
         destinationFile = coverAvorion.dataConfig['destinationFile']
+        destinationAvorion = sourceAvorion
         if len(destinationFile) > 0:
-            destinationAvorion = AvorionFile(destinationFile)
-            destinationAvorion.write_data(result)
-            mesage = f'Lưu thành công: {destinationFile}'
-        else:
-            sourceAvorion.write_data(result)
-            mesage = f'Lưu đè thành công: {sourceFile}'
-        self.controller.set_status(mesage)
-        messagebox.showinfo("Dịch trò chơi Avorion", mesage)
+            destinationAvorion = AvorionFile(destinationFile, self.controller)
+        progressAvorion = ProgressToplevel(self.controller, trans, destinationAvorion, sourceFile)
+        self.controller.set_status(f'Chờ dịch: {sourceFile}')

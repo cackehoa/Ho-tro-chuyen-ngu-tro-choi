@@ -102,14 +102,8 @@ class ExportCsvDialog(Dialog):
 
     #Trả về danh sách cặp ký tự bỏ qua không dịch bên trong
     def get_esc_char_list(self):
-        result = []
         value = self.escCharEntry.get()
-        listChar = value.split(',')
-        for row in listChar:
-            char2 = row.strip()
-            if len(char2) == 2:
-                result.append((char2[0], char2[1]))
-        return result
+        return value
 
     #Hiển thị phần nút bấm hộp thoại
     def buttonbox(self):
