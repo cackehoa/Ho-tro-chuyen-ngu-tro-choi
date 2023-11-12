@@ -36,7 +36,9 @@ class IniThread(threading.Thread):
             for line in self.sourceData:
                 self.countData += 1
                 if line[0] == 'var':
-                    line[2] = trans.trans_normal(line[2])
+                    vie = trans.trans_normal(line[2])
+                    self.resultData.append(('var', line[1], vie))
+                    continue
                 self.resultData.append(line)
 
 '''Lớp tạo đa luồng dịch'''

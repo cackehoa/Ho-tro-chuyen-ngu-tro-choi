@@ -38,6 +38,7 @@ class EngToVieTrans():
         ('if', 'nếu'), ('If', 'Nếu'), ('IF', 'NẾU'),
         ('and', 'và'), ('And', 'Và'), ('AND', 'VÀ'),
         ('or', 'hoặc'), ('Or', 'Hoặc'), ('OR', 'HOẶC'),
+        ('as long as', 'miễn là'), ('As long as', 'Miễn là'), ('AS LONG AS', 'MIỄN LÀ'),
         ('until now', 'cho đến bây giờ'), ('Until now', 'Cho đến bây giờ'), ('Until Now', 'Cho đến bây giờ'), ('UNTIL NOW', 'CHO ĐẾN BÂY GIỜ'),
         ('until', 'cho đến khi'), ('Until', 'Cho đến khi'), ('UNTIL', 'CHO ĐẾN KHI'),
         ('so', 'vậy'), ('So', 'Vậy'), ('SO', 'VẬY'),
@@ -484,6 +485,13 @@ class EngToVieTrans():
             keywordResult = re.findall(f'^([\S\s]+) {re.escape(keyword[0])}$', key)
             if keywordResult:
                 return cls.set_cache(key, f'{cls.trans_try(keywordResult[0])} {keyword[1]}')
+        #Chi nhỏ câu theo ' - '
+        trashResult = re.findall(f"[\s]+\-[\s]+", key)
+        if trashResult:
+            strSplit = key.split(trashResult[0])
+            for i in range(len(strSplit)):
+                strSplit[i] = cls.trans_try(strSplit[i])
+            return cls.set_cache(key, trashResult[0].join(strSplit))
         #Chi nhỏ câu theo ký patternSign
         trashResult = re.findall(f"[\s]*[{cls.patternSign}]+[\s]*", key)
         if trashResult:

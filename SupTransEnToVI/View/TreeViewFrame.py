@@ -62,6 +62,7 @@ class TreeViewFrame(ttk.Treeview):
         for col in data:
             self.insert('', 'end', values=col)
 
+    #Nhấp đúp lên treeview
     def db_click_treev(self):
         item = self.focus()
         data = self.item(item, 'values')
