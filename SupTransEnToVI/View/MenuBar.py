@@ -32,7 +32,7 @@ class MenuBar(Menu):
         exportMenu = Menu(self, tearoff=0)
         exportMenu.add_command(label="CSV", command = self.export_csv)
         exportMenu.add_command(label="INI", command = self.export_ini)
-        #exportMenu.add_command(label="JSON", command = self.export_json)
+        exportMenu.add_command(label="JSON", command = self.export_json)
         exportMenu.add_command(label="LUA", command = self.export_lua)
         #exportMenu.add_command(label="XUnity", command = self.export_xunity)
         self.add_cascade(label="Xuất", menu=exportMenu)
@@ -112,10 +112,24 @@ class MenuBar(Menu):
         self.controller.set_status('Xuất JSON...')
         typeFile = ('JSON', '*.json'), ('Tất cả', '*.*')
         exportJson = ExportTwoDialog(self.controller, 'JSON', typeFile)
-        self.controller.set_status('Chức năng này chưa được hoàng thành')
-        
-        messagebox.showinfo('Cảnh báo', 'Chức năng này chưa được hoàng thành')
-        print(exportJson.dataConfig)
+        sourceFile = exportJson.dataConfig['sourceFile']
+        sourceJson = JsonFile(sourceFile)
+        if not sourceJson.isFile():
+            self.controller.set_status('Tệp tin không tồn tại')
+            return
+        data = sourceJson.read_all()
+        #Xác định đối tượng lưu
+        destinationJson = sourceJson
+        destinationFile = exportJson.dataConfig['destinationFile']
+        if len(destinationFile) > 0:
+            destinationJson = JsonFile(destinationFile)
+        #Tắt bộ động
+        self.controller.stop_dynamic()
+        #Dịch
+        trans = JsonTrans(self.controller)
+        trans.trans_data(data, exportJson.dataConfig['tryTrans'], exportJson.dataConfig['escChar'])
+        progressJson = ProgressToplevel(self.controller, trans, destinationJson, sourceFile)
+        self.controller.set_status(f'Chờ dịch: {sourceFile}')
 
     def export_lua(self):
         self.controller.set_status('Xuất LUA...')

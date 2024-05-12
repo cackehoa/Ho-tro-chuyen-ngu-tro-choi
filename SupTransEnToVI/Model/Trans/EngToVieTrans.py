@@ -492,6 +492,12 @@ class EngToVieTrans():
             for i in range(len(strSplit)):
                 strSplit[i] = cls.trans_try(strSplit[i])
             return cls.set_cache(key, trashResult[0].join(strSplit))
+        trashResult = re.findall(f"[\s]*\-[\-]+[\s]*", key)
+        if trashResult:
+            strSplit = key.split(trashResult[0])
+            for i in range(len(strSplit)):
+                strSplit[i] = cls.trans_try(strSplit[i])
+            return cls.set_cache(key, trashResult[0].join(strSplit))
         #Chi nhỏ câu theo ký patternSign
         trashResult = re.findall(f"[\s]*[{cls.patternSign}]+[\s]*", key)
         if trashResult:

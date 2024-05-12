@@ -112,7 +112,7 @@ Animal = {
 # Hướng dẫn sử dụng chi tiết:
 Xem thêm tag Wiki nhé
 # Liên lạc và ủng hộ
-- Ủng hộ tại: [Playerduo](https://playerduo.com/cackehoa)
+- Ủng hộ tại: [Playerduo](https://playerduo.net/cackehoa)
 - Fanpage: [fackebook](https://www.facebook.com/cackehoa)
 - Discord: [Discord](https://discord.gg/Z5C98FG)
 - Youtube: [Cắc kè hoa](https://www.youtube.com/c/Cắckèhoa)
