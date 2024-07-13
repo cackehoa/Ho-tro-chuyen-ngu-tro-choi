@@ -98,7 +98,14 @@ Hello=Xin chào
 ````
 
 Tôi đã gặp khi việt hóa game: DoorKickers, [Car Mechanic Simulator](https://github.com/cackehoa/Car-Mechanic-Simulator-2018-Mercedes-Benz-viet-hoa)
-## 4. Lua (\*.lua):
+## 4. INI (\*.ini):
+Ví dụ
+````
+English=Tiếng Anh
+Hello=Xin chào
+````
+
+## 5. Lua (\*.lua):
 Ví dụ:
 ````
 English = "Tiếng Anh",
@@ -108,6 +115,15 @@ Animal = {
 	Cat = "Mèo"
 }
 ````
+
+# Trò chơi chuyên biệt:
+Đây là một số định dạng được viết chuyên cho một số trò chơi chuyên biệt mà mình gặp và chỉ đúng với trò chơi đó. Nếu bạn áp dụng vào định dạng khác có thể cho ra kết quả không mong muốn.
+
+## 1. Dịch XML thành ProjectZombie
+Dùng để dịch tiệp chuẩn xml trong ProjectZombie sang định chuẩn khác khi việt hóa
+
+## 2. Avorion
+Dành riêng khi dịch trò chơi Avorion
 
 # Hướng dẫn sử dụng chi tiết:
 Xem thêm tag Wiki nhé

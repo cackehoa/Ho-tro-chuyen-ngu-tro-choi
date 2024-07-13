@@ -28,25 +28,27 @@ class EngToVieTrans():
         ('but', 'nhưng'), ('But', 'Nhưng'), ('BUT', 'NHƯNG'),
         ('maybe', 'có lẽ là'), ('Maybe', 'Có lẽ là'), ('MAYBE', 'CÓ LẼ LÀ'),
         ('because of', 'vì'), ('Because of', 'Vì'), ('Because Of', 'Vì'),('BECAUSE OF', 'VÌ'),
+        ('Just because', 'Chỉ vì'), ('just because', 'chỉ vì'), ('Just Because', 'Chỉ vì'), ('JUST BECAUSE', 'CHỈ VÌ'),
         ('because', 'bởi vì'), ('Because', 'Bởi vì'), ('BECAUSE', 'BỞI VÌ'),
         ('such as', 'chẳng hạn như'), ('Such as', 'Chẳng hạn như'), ('Such As', 'Chẳng hạn như'), ('SUCH AS', 'CHẲNG HẠN NHƯ'),
         ('as if ', 'như thể'), ('As if', 'Như thể'), ('As If', 'Như thể'), ('AS IF', 'NHƯ THỂ'),
-        ('of course', 'tất nhiên'), ('Of course', 'Tất nhiên'), ('Of Course', 'Tất nhiên'), ('OF COURSE', 'TẤT NHIÊN'),
-        ('so that', 'vậy nên'), ('So that', 'Vậy nên'), ('So That', 'Vậy nên'), ('SO THAT', 'VẬY NÊN'),
-        ('for that', 'vì điều đó'), ('For that', 'Vì điều đó'), ('For That', 'Vì điều đó'), ('FOR THAT', 'VÌ ĐIỀU ĐÓ'),
-        ('as if', 'như thể'), ('As if', 'Như thể'), ('As If', 'Như thể'), ('AS IF', 'NHƯ THỂ'),
         ('if', 'nếu'), ('If', 'Nếu'), ('IF', 'NẾU'),
+        ('although', 'mặc dù'), ('Although', 'Mặc dù'), ('ALTHOUGH', 'MẶC DÙ'),
         ('and', 'và'), ('And', 'Và'), ('AND', 'VÀ'),
         ('or', 'hoặc'), ('Or', 'Hoặc'), ('OR', 'HOẶC'),
+        ('of course', 'tất nhiên'), ('Of course', 'Tất nhiên'), ('Of Course', 'Tất nhiên'), ('OF COURSE', 'TẤT NHIÊN'),
+        ('for that', 'vì điều đó'), ('For that', 'Vì điều đó'), ('For That', 'Vì điều đó'), ('FOR THAT', 'VÌ ĐIỀU ĐÓ'),
         ('as long as', 'miễn là'), ('As long as', 'Miễn là'), ('AS LONG AS', 'MIỄN LÀ'),
         ('until now', 'cho đến bây giờ'), ('Until now', 'Cho đến bây giờ'), ('Until Now', 'Cho đến bây giờ'), ('UNTIL NOW', 'CHO ĐẾN BÂY GIỜ'),
         ('until', 'cho đến khi'), ('Until', 'Cho đến khi'), ('UNTIL', 'CHO ĐẾN KHI'),
-        ('so', 'vậy'), ('So', 'Vậy'), ('SO', 'VẬY'),
         ('ever since', 'kể từ đó'), ('Ever since', 'Kể từ đó'), ('Ever Since', 'Kể từ đó'), ('EVER SINCE', 'KỂ TỪ ĐÓ'),
-        ('since', 'kể từ khi'), ('Since', 'Kể từ khi'), ('SINCE', 'KỂ TỪ KHI'),
+        ('even though', 'mặc dù'), ('Even though', 'Mặc dù'), ('Even Though', 'Mặc dù'), ('EVEN THOUGH', 'MẶC DÙ'),
         ('perhaps', 'có lẽ'), ('Perhaps', 'Có lẽ'), ('PERHAPS', 'CÓ LẼ'),
         ('otherwise', 'nếu không thì'), ('Otherwise', 'Nếu không thì'), ('OTHERWISE', 'NẾU KHÔNG THÌ'),
         ('before', 'trước khi'), ('Before', 'Trước khi'), ('BEFORE', 'TRƯỚC KHI'),
+        ('since', 'kể từ khi'), ('Since', 'Kể từ khi'), ('SINCE', 'KỂ TỪ KHI'),
+        ('so that', 'vậy nên'), ('So that', 'Vậy nên'), ('So That', 'Vậy nên'), ('SO THAT', 'VẬY NÊN'),
+        ('so', 'vậy'), ('So', 'Vậy'), ('SO', 'VẬY'),
         ('then', 'sau đó,'), ('Then', 'Sau đó,'), ('THEN', 'SAU ĐÓ,')]
     #Định nghĩa dấu xuống dòng
     newline = ['\n', '\\n']
@@ -471,6 +473,19 @@ class EngToVieTrans():
             for i in range(len(strSplit)):
                 strSplit[i] = cls.trans_try(strSplit[i])
             return cls.set_cache(key, trashResult[0].join(strSplit))
+        #Chia nhỏ câu theo ' - '
+        trashResult = re.findall(f"[\s]+[\-]+[\s]+", key)
+        if trashResult:
+            strSplit = key.split(trashResult[0])
+            for i in range(len(strSplit)):
+                strSplit[i] = cls.trans_try(strSplit[i])
+            return cls.set_cache(key, trashResult[0].join(strSplit))
+        trashResult = re.findall(f"[\s]*\-[\-]+[\s]*", key)
+        if trashResult:
+            strSplit = key.split(trashResult[0])
+            for i in range(len(strSplit)):
+                strSplit[i] = cls.trans_try(strSplit[i])
+            return cls.set_cache(key, trashResult[0].join(strSplit))
         #Chia nhỏ câu theo từ khóa câu
         for keyword in cls.keywords:
             #Từ khóa ở giữa chia câu thành 2 phần
@@ -485,19 +500,6 @@ class EngToVieTrans():
             keywordResult = re.findall(f'^([\S\s]+) {re.escape(keyword[0])}$', key)
             if keywordResult:
                 return cls.set_cache(key, f'{cls.trans_try(keywordResult[0])} {keyword[1]}')
-        #Chi nhỏ câu theo ' - '
-        trashResult = re.findall(f"[\s]+\-[\s]+", key)
-        if trashResult:
-            strSplit = key.split(trashResult[0])
-            for i in range(len(strSplit)):
-                strSplit[i] = cls.trans_try(strSplit[i])
-            return cls.set_cache(key, trashResult[0].join(strSplit))
-        trashResult = re.findall(f"[\s]*\-[\-]+[\s]*", key)
-        if trashResult:
-            strSplit = key.split(trashResult[0])
-            for i in range(len(strSplit)):
-                strSplit[i] = cls.trans_try(strSplit[i])
-            return cls.set_cache(key, trashResult[0].join(strSplit))
         #Chi nhỏ câu theo ký patternSign
         trashResult = re.findall(f"[\s]*[{cls.patternSign}]+[\s]*", key)
         if trashResult:

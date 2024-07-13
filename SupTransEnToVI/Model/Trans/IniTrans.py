@@ -28,7 +28,8 @@ class IniThread(threading.Thread):
             for line in self.sourceData:
                 self.countData += 1
                 if line[0] == 'var':
-                    vie = trans.trans_try(line[2])
+                    eng = self.controller.filter_whitespace(line[2])
+                    vie = trans.trans_try(eng)
                     self.resultData.append(('var', line[1], vie))
                     continue
                 self.resultData.append(line)
@@ -36,7 +37,8 @@ class IniThread(threading.Thread):
             for line in self.sourceData:
                 self.countData += 1
                 if line[0] == 'var':
-                    vie = trans.trans_normal(line[2])
+                    eng = self.controller.filter_whitespace(line[2])
+                    vie = trans.trans_normal(eng)
                     self.resultData.append(('var', line[1], vie))
                     continue
                 self.resultData.append(line)
